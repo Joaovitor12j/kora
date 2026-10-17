@@ -9,6 +9,9 @@ dependencies = [
     "pydantic-settings>=2.4",
     "yt-dlp[default]",
     "curl_cffi",
+    "trafilatura>=2",
+    "faster-whisper>=1.1",
+    "av<16",  # PyAV 19 quebra o faster-whisper (metadata_errors)
 ]
 
 [dependency-groups]

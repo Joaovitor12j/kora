@@ -1,7 +1,7 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from . import fallback, ytdlp
+from . import article, fallback, ytdlp
 
 
 @dataclass
@@ -12,6 +12,11 @@ class Meta:
     autor: str = ""
     descricao: str = ""
     publicado: str = ""  # AAAA-MM-DD
+    conteudo: str = ""  # texto do artigo, legenda do site ou transcrição
+    conteudo_tipo: str = ""  # artigo | legenda | transcricao
+    tem_midia: bool = False
+    duracao: float = 0.0
+    legendas: dict = field(default_factory=dict)
 
 
 def _titulo(raw: str | None, descricao: str, url: str) -> str:
@@ -19,18 +24,39 @@ def _titulo(raw: str | None, descricao: str, url: str) -> str:
     if raw and not re.match(r"^(Video|Photo|Post) by ", raw):
         return raw
     first = descricao.strip().splitlines()[0] if descricao.strip() else ""
-    return (first[:80] or raw or url)
+    return first[:80] or raw or url
+
+
+def _fontes(plataforma: str):
+    """Ordem de tentativa. Página comum: artigo primeiro; o yt-dlp genérico só se não houver texto."""
+    if plataforma == "web":
+        return [article.extract, ytdlp.extract, fallback.web]
+    return [ytdlp.extract, lambda url: fallback.extract(url, plataforma)]
+
+
+def _completar_x(url: str, info: dict) -> dict:
+    """O yt-dlp corta tweets longos (~300 caracteres) e deixa t.co; o FixTweet traz o texto inteiro."""
+    try:
+        completo = fallback.x(url)
+    except Exception:
+        return info
+    if len(completo["descricao"]) <= len(info.get("descricao") or ""):
+        return info
+    return {**info, "descricao": completo["descricao"], "titulo": completo["titulo"] or info.get("titulo")}
 
 
 def fetch_meta(url: str, plataforma: str) -> Meta:
-    """yt-dlp primeiro; fallback por plataforma quando ele não suporta o link."""
-    try:
-        info = ytdlp.extract(url)
-    except Exception as first:
+    erros = []
+    for fonte in _fontes(plataforma):
         try:
-            info = fallback.extract(url, plataforma)
-        except Exception as second:
-            raise RuntimeError(f"yt-dlp: {first}; fallback: {second}") from second
+            info = fonte(url)
+            break
+        except Exception as e:
+            erros.append(str(e).splitlines()[0][:150] if str(e) else type(e).__name__)
+    else:
+        raise RuntimeError(" | ".join(erros))
+    if plataforma == "x":
+        info = _completar_x(url, info)
     descricao = (info.get("descricao") or "").strip()
     return Meta(
         url=url,
@@ -39,7 +65,9 @@ def fetch_meta(url: str, plataforma: str) -> Meta:
         autor=info.get("autor") or "",
         descricao=descricao,
         publicado=info.get("publicado") or "",
+        conteudo=info.get("conteudo") or "",
+        conteudo_tipo=info.get("conteudo_tipo") or "",
+        tem_midia=info.get("tem_midia", False),
+        duracao=info.get("duracao", 0.0),
+        legendas=info.get("legendas") or {},
     )
-
-
-__all__ = ["Meta", "fetch_meta"]

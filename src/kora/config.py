@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     vault_saved_dir: str = "Referencias/Salvos"
     db_path: Path = Path("data/queue.sqlite")
     anthropic_api_key: str = ""
+    whisper_model: str = "small"
+    whisper_language: str = ""  # vazio = detectar o idioma
+    max_audio_minutes: int = 30
 
     @property
     def inbox_dir(self) -> Path:

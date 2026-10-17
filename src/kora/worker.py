@@ -4,6 +4,7 @@ import time
 from .config import Settings, get_settings
 from .db import FALHOU, Item, Queue
 from .extractors.meta import fetch_meta
+from .media import attach_transcript
 from .telegram_api import send_message
 from .vault import write_note
 
@@ -14,6 +15,7 @@ IDLE_SLEEP = 2.0
 def process(queue: Queue, settings: Settings, item: Item) -> str:
     """Extrai metadados e grava a nota. Retorna o título."""
     meta = fetch_meta(item.url_canonica, item.plataforma)
+    attach_transcript(meta, settings)
     path = write_note(settings.inbox_dir, meta, item.id)
     queue.done(item.id, meta.titulo, str(path))
     return meta.titulo

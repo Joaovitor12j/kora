@@ -17,6 +17,16 @@ def _q(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)  # JSON é YAML válido
 
 
+def _conteudo(meta: Meta) -> list[str]:
+    if not meta.conteudo:
+        return []
+    if meta.conteudo_tipo == "artigo":
+        return ["## Conteúdo", meta.conteudo, ""]
+    corpo = [f"> {linha}" for linha in meta.conteudo.splitlines() if linha.strip()]
+    titulo = "Transcrição completa" if meta.conteudo_tipo == "transcricao" else "Legenda do vídeo"
+    return ["## Transcrição", f"> [!note]- {titulo}", *corpo, ""]
+
+
 def render(meta: Meta, criado: str) -> str:
     lines = [
         "---",
@@ -39,6 +49,7 @@ def render(meta: Meta, criado: str) -> str:
         meta.descricao or "_(sem legenda)_",
         "",
     ]
+    lines += _conteudo(meta)
     return "\n".join(lines)
 
 

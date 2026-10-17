@@ -1,7 +1,10 @@
 """Metadados de links que o yt-dlp não suporta (post de foto do Instagram, artigos, TikTok)."""
 import html
 import re
+import time
+from urllib.parse import urlsplit
 
+import httpx
 from curl_cffi import requests
 
 OG_RE = r'<meta[^>]+property="og:%s"[^>]+content="([^"]*)"'
@@ -53,8 +56,37 @@ def web(url: str) -> dict:
     return {"titulo": titulo, "autor": og(page, "site_name"), "descricao": og(page, "description")}
 
 
+def parse_fxtwitter(data: dict) -> dict:
+    tweet = data["tweet"]
+    autor = tweet.get("author") or {}
+    texto = (tweet.get("text") or "").strip()
+    if not texto:
+        raise ValueError("tweet sem texto")
+    ts = tweet.get("created_timestamp")
+    return {
+        "titulo": f"{autor.get('name', '')}: {texto.splitlines()[0][:70]}".strip(": "),
+        "autor": f"@{autor['screen_name']}" if autor.get("screen_name") else "",
+        "descricao": texto,
+        "publicado": time.strftime("%Y-%m-%d", time.gmtime(ts)) if ts else "",
+    }
+
+
+def x(url: str) -> dict:
+    """Tweet só de texto (o yt-dlp exige vídeo). API pública do FixTweet."""
+    usuario, _, status_id = urlsplit(url).path.strip("/").partition("/status/")
+    status_id = status_id.split("/")[0]
+    if not (usuario and status_id):
+        raise ValueError("URL de tweet inválida")
+    # curl_cffi recebe 401 do FixTweet; httpx comum passa.
+    r = httpx.get(f"https://api.fxtwitter.com/{usuario}/status/{status_id}", timeout=20,
+                  headers={"User-Agent": "kora/0.1"}, follow_redirects=True)
+    r.raise_for_status()
+    data = r.json()
+    return parse_fxtwitter(data)
+
+
 def extract(url: str, plataforma: str) -> dict:
-    handler = {"instagram": instagram, "tiktok": tiktok, "web": web}.get(plataforma)
+    handler = {"instagram": instagram, "tiktok": tiktok, "web": web, "x": x}.get(plataforma)
     if not handler:
         raise ValueError(f"sem fallback para {plataforma}")
     return handler(url)

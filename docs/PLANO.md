@@ -109,11 +109,13 @@ Critério: ≥ 80% dos links de teste geram metadados + áudio utilizável.
 Entrega: mando link, nota aparece no vault com legenda e metadados.
 
 ## Fase 2 — Conteúdo real
-- [ ] Vídeo: baixar só áudio → `faster-whisper` → transcrição na nota. Apagar o áudio depois.
-- [ ] Usar legenda do próprio site quando existir (mais rápido que transcrever).
-- [ ] Artigo/página comum: `trafilatura` para extrair o texto.
-- [ ] X sem vídeo: tentar `api.fxtwitter.com`; se falhar, nota só com a URL e `status: falhou`.
+- [x] Vídeo: baixar só áudio → `faster-whisper` → transcrição na nota. Apagar o áudio depois.
+- [x] Usar legenda do próprio site quando existir (mais rápido que transcrever).
+- [x] Artigo/página comum: `trafilatura` para extrair o texto.
+- [x] X sem vídeo: tentar `api.fxtwitter.com`; se falhar, nota só com a URL e `status: falhou`.
 - [ ] Post de imagem (carrossel do IG): guardar legenda; OCR/visão fica para depois.
+
+Notas: áudio baixado em pasta temporária (apagado ao fim); formato `bestaudio/worst` (X sem faixa de áudio: 77 MB → 0,7 MB); vídeos acima de `MAX_AUDIO_MINUTES` ficam só com a legenda; falha de transcrição não derruba o item. Vídeo sem faixa de áudio gera nota sem transcrição.
 
 ## Fase 3 — Categorização com IA
 - [ ] Prompt com taxonomia fixa + tags existentes; saída em JSON (título, resumo, pontos-chave, categoria, tags).
