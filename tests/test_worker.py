@@ -29,7 +29,7 @@ def test_success_writes_note_and_notifies(env, monkeypatch):
     got = queue.get(item.id)
     assert got.status == CONCLUIDO
     assert (settings.inbox_dir / got.nota_path.split("/")[-1]).exists()
-    assert sent == ["salvo: Olá"]
+    assert sent == ["salvo (sem IA): Olá"]
 
 
 def test_failure_retries_then_notifies_once(env, monkeypatch):

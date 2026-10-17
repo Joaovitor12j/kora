@@ -17,6 +17,13 @@ cp .env.example .env   # preencher TELEGRAM_BOT_TOKEN e TELEGRAM_ALLOWED_CHAT_ID
 uv sync
 ```
 
+## IA (categorização)
+
+`LLM_PROVIDER` escolhe **um** provedor: `anthropic`, `deepseek` ou `ollama` (vazio = sem IA). Cada um
+funciona sozinho, com seu modelo no `.env` (`ANTHROPIC_MODEL`, `DEEPSEEK_MODEL`, `OLLAMA_MODEL`). Se a
+chave faltar ou o nome estiver errado, o worker nem inicia. Se a chamada falhar, a nota fica em
+`Referencias/Salvos/_inbox/` com `status: pendente`.
+
 ## Rodar
 
 ```bash

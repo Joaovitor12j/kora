@@ -118,10 +118,16 @@ Entrega: mando link, nota aparece no vault com legenda e metadados.
 Notas: áudio baixado em pasta temporária (apagado ao fim); formato `bestaudio/worst` (X sem faixa de áudio: 77 MB → 0,7 MB); vídeos acima de `MAX_AUDIO_MINUTES` ficam só com a legenda; falha de transcrição não derruba o item. Vídeo sem faixa de áudio gera nota sem transcrição.
 
 ## Fase 3 — Categorização com IA
-- [ ] Prompt com taxonomia fixa + tags existentes; saída em JSON (título, resumo, pontos-chave, categoria, tags).
-- [ ] Validar o JSON; se a categoria não for da lista, usar `outros`.
-- [ ] Mover a nota para `Referencias/Salvos/<categoria>/`.
-- [ ] Bot responde com categoria e resumo de uma linha; permitir corrigir respondendo "categoria: X".
+- [x] Prompt com taxonomia fixa + tags existentes; saída em JSON (título, resumo, pontos-chave, categoria, tags).
+- [x] Validar o JSON; se a categoria não for da lista, usar `outros`.
+- [x] Mover a nota para `Referencias/Salvos/<categoria>/`.
+- [x] Bot responde com categoria e resumo de uma linha.
+- [ ] Corrigir a categoria respondendo "categoria: X".
+- [ ] Reprocessar notas `pendente` (IA estava fora do ar).
+
+Provedores (`src/kora/llm/`), um ativo por vez via `LLM_PROVIDER`: `anthropic` (SDK oficial, structured outputs, `claude-haiku-5-5`), `deepseek` (API compatível com OpenAI, modo JSON) e `ollama` (`/api/chat` com schema, `gemma4`). Taxonomia e regra de desempate em `taxonomia.py`. Conteúdo enviado ao modelo é limitado por `LLM_MAX_CHARS`.
+
+**Depois:** orquestrador que combina provedores (fallback em cadeia, comparação, roteamento por tipo de conteúdo). A interface `Provider.complete()` já permite encaixá-lo sem mudar os provedores.
 
 ## Fase 4 — Busca pelos assistentes
 - [ ] Nota índice `Referencias/Salvos/Salvos.md` com Dataview (por categoria, plataforma, data).

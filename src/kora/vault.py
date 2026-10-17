@@ -17,6 +17,13 @@ def _q(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)  # JSON é YAML válido
 
 
+def _resumo(meta: Meta) -> list[str]:
+    if not meta.resumo:
+        return []
+    pontos = [f"- {p}" for p in meta.pontos_chave]
+    return ["## Resumo", meta.resumo, "", *(["## Pontos-chave", *pontos, ""] if pontos else [])]
+
+
 def _conteudo(meta: Meta) -> list[str]:
     if not meta.conteudo:
         return []
@@ -38,13 +45,20 @@ def render(meta: Meta, criado: str) -> str:
     ]
     if meta.publicado:
         lines.append(f"publicado: {meta.publicado}")
+    if meta.categoria:
+        lines.append(f"categoria: {meta.categoria}")
     lines += [
-        "tags: []",
-        "status: pendente",
+        f"tags: [{', '.join(meta.tags)}]",
+        f"status: {'processado' if meta.categoria else 'pendente'}",
+    ]
+    if meta.ia:
+        lines.append(f"ia: {_q(meta.ia)}")
+    lines += [
         "---",
         "",
         f"# {meta.titulo}",
         "",
+        *_resumo(meta),
         "## Legenda original",
         meta.descricao or "_(sem legenda)_",
         "",
@@ -68,3 +82,23 @@ def write_note(directory: Path, meta: Meta, item_id: int, now: float | None = No
     path = note_path(directory, meta, criado, item_id)
     path.write_text(render(meta, criado), encoding="utf-8")
     return path
+
+
+def destino(settings, meta: Meta) -> Path:
+    """Pasta da categoria; sem categoria (IA indisponível) a nota espera em _inbox."""
+    return settings.saved_dir / meta.categoria if meta.categoria else settings.inbox_dir
+
+
+def tags_existentes(raiz: Path, limite: int = 80) -> list[str]:
+    """Tags já usadas nas notas salvas, da mais frequente para a menos, para a IA reaproveitar."""
+    contagem: dict[str, int] = {}
+    for nota in raiz.rglob("*.md"):
+        try:
+            cabecalho = nota.read_text(encoding="utf-8").split("---", 2)[1]
+        except (OSError, IndexError):
+            continue
+        m = re.search(r"^tags:\s*\[(.*?)\]\s*$", cabecalho, re.M)
+        for tag in (t.strip() for t in (m.group(1).split(",") if m else [])):
+            if tag:
+                contagem[tag] = contagem.get(tag, 0) + 1
+    return sorted(contagem, key=lambda t: (-contagem[t], t))[:limite]

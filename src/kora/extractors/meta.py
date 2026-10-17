@@ -17,6 +17,12 @@ class Meta:
     tem_midia: bool = False
     duracao: float = 0.0
     legendas: dict = field(default_factory=dict)
+    # Preenchidos pela IA (Fase 3); sem eles a nota fica com status pendente.
+    resumo: str = ""
+    pontos_chave: list[str] = field(default_factory=list)
+    categoria: str = ""
+    tags: list[str] = field(default_factory=list)
+    ia: str = ""  # provedor/modelo que classificou
 
 
 def _titulo(raw: str | None, descricao: str, url: str) -> str:
