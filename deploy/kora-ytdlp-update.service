@@ -1,0 +1,6 @@
+[Unit]
+Description=Kora — atualizar o yt-dlp (os sites mudam e quebram versões antigas)
+
+[Service]
+Type=oneshot
+ExecStart=@REPO@/deploy/update-ytdlp.sh

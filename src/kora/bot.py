@@ -6,6 +6,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 from .busca import buscar, formatar
 from .config import get_settings
+from .logs import configurar
+from .status import texto_status
 from .correcao import corrigir_categoria, pedido_de_categoria
 from .db import CONCLUIDO, FALHOU, Queue
 from .urls import canonicalize, extract_urls, needs_resolution, platform_of, resolve_redirects
@@ -58,15 +60,30 @@ async def on_buscar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await msg.reply_text(formatar(resultados, consulta), disable_web_page_preview=True)
 
 
+async def on_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Varre o vault para contar pendentes; fora do loop para não travar o bot.
+    texto = await asyncio.to_thread(texto_status, context.application.bot_data["settings"])
+    await update.effective_message.reply_text(texto, disable_web_page_preview=True)
+
+
+async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Sem isto, uma falha num comando só aparece no log e o usuário vê o bot mudo."""
+    log.error("erro ao tratar a mensagem", exc_info=context.error)
+    if isinstance(update, Update) and update.effective_message:
+        await update.effective_message.reply_text("Deu erro aqui. Detalhes no log do bot.")
+
+
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     settings = get_settings()
+    configurar(settings.log_level)
     app = Application.builder().token(settings.telegram_bot_token).build()
     app.bot_data["queue"] = Queue(settings.db_path)
     app.bot_data["settings"] = settings
     only_me = filters.Chat(chat_id=settings.telegram_allowed_chat_id)
     app.add_handler(CommandHandler("buscar", on_buscar, filters=only_me))
+    app.add_handler(CommandHandler("status", on_status, filters=only_me))
     app.add_handler(MessageHandler(only_me & filters.TEXT & ~filters.COMMAND, on_message))
+    app.add_error_handler(on_error)
     log.info("bot iniciado (long polling)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

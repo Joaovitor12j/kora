@@ -11,6 +11,7 @@ from .classificar import classificar
 from .config import Settings, get_settings
 from .db import Queue
 from .llm import Provider, build_provider
+from .logs import configurar
 from .vault import destino, ler_nota, tags_existentes, write_note
 
 log = logging.getLogger("kora.reclassificar")
@@ -57,11 +58,11 @@ def reclassificar(settings: Settings, queue: Queue, provider: Provider, limite: 
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--limit", type=int, help="processa no máximo N notas")
     args = ap.parse_args()
     settings = get_settings()
+    configurar(settings.log_level)
     provider = build_provider(settings)
     if provider is None:
         raise SystemExit("Defina LLM_PROVIDER no .env (anthropic, deepseek ou ollama).")

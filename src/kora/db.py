@@ -171,6 +171,16 @@ class Queue:
         row = self._conn.execute("SELECT * FROM itens WHERE url_canonica = ?", (url_canonica,)).fetchone()
         return self._item(row) if row else None
 
+    def falhas_recentes(self, limite: int = 5) -> list[Item]:
+        rows = self._conn.execute("SELECT * FROM itens WHERE status = ? ORDER BY atualizado_em DESC LIMIT ?",
+                                  (FALHOU, limite)).fetchall()
+        return [self._item(r) for r in rows]
+
+    def ultimo_concluido(self) -> tuple[Item, float] | None:
+        row = self._conn.execute("SELECT * FROM itens WHERE status = ? ORDER BY atualizado_em DESC LIMIT 1",
+                                 (CONCLUIDO,)).fetchone()
+        return (self._item(row), row["atualizado_em"]) if row else None
+
     def get(self, item_id: int) -> Item | None:
         row = self._conn.execute("SELECT * FROM itens WHERE id = ?", (item_id,)).fetchone()
         return self._item(row) if row else None

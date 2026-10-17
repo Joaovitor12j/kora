@@ -1,5 +1,6 @@
 import logging
 import re
+import threading
 import time
 
 from .config import Settings, get_settings
@@ -7,6 +8,7 @@ from .db import FALHOU, Item, Queue
 from .classificar import classificar
 from .extractors.meta import Meta, fetch_meta
 from .indice import garantir_indice
+from .logs import configurar
 from .llm import Provider, build_provider
 from .media import attach_transcript
 from .telegram_api import send_message
@@ -69,14 +71,26 @@ def run_once(queue: Queue, settings: Settings, provider: Provider | None = None)
     return True
 
 
+def batimento(path, intervalo: float = 10.0) -> None:
+    """Marca que o processo está vivo (o /status lê a idade do arquivo), mesmo durante uma transcrição longa."""
+    while True:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.touch()
+        except OSError:
+            log.warning("não consegui atualizar %s", path)
+        time.sleep(intervalo)
+
+
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     settings = get_settings()
+    configurar(settings.log_level)
     queue = Queue(settings.db_path)
     provider = build_provider(settings)
     if garantir_indice(settings):
         log.info("índice Salvos.md criado")
     log.info("IA: %s", provider.label if provider else "desligada")
+    threading.Thread(target=batimento, args=(settings.heartbeat_path,), daemon=True).start()
     log.info("retomando %s item(ns) interrompido(s)", queue.requeue_stuck())
     log.info("worker iniciado")
     try:

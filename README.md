@@ -46,3 +46,28 @@ uv run pytest        # testes
 ```
 
 Plano completo e fases: [docs/PLANO.md](docs/PLANO.md).
+
+## Como serviço (systemd --user)
+
+Pare o bot e o worker que estiverem em terminais (dois bots com o mesmo token disputam as mensagens) e rode:
+
+```bash
+deploy/install.sh
+```
+
+Isso instala e inicia `kora-bot`, `kora-worker` e um timer diário que atualiza o `yt-dlp` (reinicia o worker
+se a versão mudou; `KORA_YTDLP_NIGHTLY=1` segue as versões nightly). Reinício automático em falha.
+
+```bash
+systemctl --user status kora-bot kora-worker   # estado
+journalctl --user -u kora-worker -f            # logs
+deploy/install.sh uninstall                    # remove
+loginctl enable-linger "$USER"                 # opcional: sobe no boot, sem login
+```
+
+No Telegram, `/status` mostra se o worker está vivo, a fila, notas pendentes de IA, o provedor de IA, a
+versão do `yt-dlp`, o último salvo e as falhas recentes. O nível de log vem de `LOG_LEVEL` (padrão `INFO`);
+os logs de HTTP ficam silenciados porque a URL da API do Telegram carrega o token do bot.
+
+Limite conhecido: o Telegram guarda mensagens não lidas por 24 h. Com a máquina desligada por mais tempo,
+links enviados nesse intervalo se perdem.

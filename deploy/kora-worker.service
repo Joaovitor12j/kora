@@ -1,0 +1,18 @@
+[Unit]
+Description=Kora — worker (extração, transcrição, IA e notas)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@REPO@
+ExecStart=@REPO@/.venv/bin/kora-worker
+Restart=on-failure
+RestartSec=5
+# A transcrição usa a CPU toda; não atrapalha o resto da máquina.
+Nice=10
+TimeoutStopSec=30
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

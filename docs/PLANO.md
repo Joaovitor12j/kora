@@ -138,10 +138,12 @@ Provedores (`src/kora/llm/`), um ativo por vez via `LLM_PROVIDER`: `anthropic` (
 Busca atual: varredura simples dos arquivos (todos os termos, sem acento, com pesos por campo), suficiente até algumas centenas de notas. Embeddings/MCP continuam adiados até o volume pedir.
 
 ## Fase 5 — Robustez
-- [ ] Rodar bot e worker como serviço `systemd --user` (sobe com a máquina).
-- [ ] Retentativa com backoff; após 3 falhas, `status: falhou` e aviso no Telegram.
-- [ ] Atualizar `yt-dlp` automaticamente (quebra com frequência quando os sites mudam).
-- [ ] Log simples e comando `/status` no bot (fila pendente, últimas falhas).
+- [x] Rodar bot e worker como serviço `systemd --user` (sobe com a máquina).
+- [x] Retentativa com backoff; após 3 falhas, `status: falhou` e aviso no Telegram.
+- [x] Atualizar `yt-dlp` automaticamente (quebra com frequência quando os sites mudam).
+- [x] Log simples e comando `/status` no bot (fila pendente, últimas falhas).
+
+Implementação: `deploy/` (units, `install.sh`, `update-ytdlp.sh`), `status.py`, `logs.py` e batimento do worker. Retentativa já vinha da Fase 1 (3 tentativas, backoff de 1 e 2 min).
 
 ## Riscos / dúvidas
 - **Retenção do Telegram**: `getUpdates` guarda mensagens por **24 horas**. Máquina desligada mais que isso perde links. Opções: rodar só o bot (leve) num Raspberry/VPS e o worker pesado local; ou aceitar o risco.

@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     vault_path: Path
     vault_saved_dir: str = "Referencias/Salvos"
     db_path: Path = Path("data/queue.sqlite")
+    log_level: str = "INFO"
     # IA: um único provedor ativo (anthropic, deepseek ou ollama).
     # Vazio desliga a categorização (a nota fica em _inbox com status pendente).
     llm_provider: str = ""
@@ -28,6 +29,10 @@ class Settings(BaseSettings):
     whisper_model: str = "small"
     whisper_language: str = ""  # vazio = detectar o idioma
     max_audio_minutes: int = 30
+
+    @property
+    def heartbeat_path(self) -> Path:
+        return self.db_path.parent / "worker.heartbeat"
 
     @property
     def saved_dir(self) -> Path:

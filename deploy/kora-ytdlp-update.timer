@@ -1,0 +1,11 @@
+[Unit]
+Description=Kora — atualizar o yt-dlp todo dia
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+# Se a máquina estava desligada na hora marcada, roda ao ligar.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
