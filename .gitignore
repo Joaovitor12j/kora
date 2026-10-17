@@ -1,0 +1,18 @@
+# Segredos
+.env
+cookies*.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Dados locais
+data/
+*.sqlite
+*.db
+tmp/
+spike/.venv/
+spike/out/
+spike/links.txt
