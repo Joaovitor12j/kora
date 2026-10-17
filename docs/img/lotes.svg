@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 296" width="960" height="296" font-family="-apple-system, 'Segoe UI', 'DejaVu Sans', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Quando o worker roda</title>
+<desc id="d">Linha do tempo: o bot fica sempre ligado e a fila acumula links; o primeiro lote roda 1 hora depois de ligar o computador e os seguintes 8 horas depois do fim do anterior.</desc>
+<defs>
+<marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#57606a"/></marker>
+</defs>
+<rect x="0.5" y="0.5" width="959" height="295" rx="12" fill="#ffffff" stroke="#d0d7de"/>
+<rect x="30" y="24" width="900" height="44" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+<text x="480" y="52" font-size="14.5" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Bot sempre ligado: recebe os links na hora e responde /buscar, /status e correções</text>
+<rect x="30" y="82" width="900" height="44" rx="10" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.4"/>
+<text x="50" y="109" font-size="13.5" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">Fila (SQLite)</text>
+<rect x="215" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="239" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<rect x="300" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="324" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<rect x="360" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="384" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<rect x="610" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="634" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<rect x="690" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="714" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<rect x="830" y="93" width="48" height="22" rx="11" fill="#ffffff" stroke="#8c959f"/>
+<text x="854" y="108.5" font-size="11.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link</text>
+<text x="480" y="144" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="italic">links chegam a qualquer hora e esperam o próximo lote</text>
+<line x1="40" y1="206" x2="925" y2="206" stroke="#57606a" stroke-width="2" marker-end="url(#seta)"/>
+<text x="925" y="236" font-size="12" font-weight="normal" fill="#57606a" text-anchor="end" font-style="normal">tempo, com o computador ligado</text>
+<circle cx="70" cy="206" r="9" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+<text x="70" y="178" font-size="13" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">liga o PC</text>
+<rect x="215" y="189" width="90" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+<text x="260" y="211" font-size="14" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">lote 1</text>
+<rect x="475" y="189" width="90" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+<text x="520" y="211" font-size="14" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">lote 2</text>
+<rect x="735" y="189" width="90" height="34" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+<text x="780" y="211" font-size="14" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">lote 3</text>
+<text x="165" y="196" font-size="13" font-weight="bold" fill="#16a34a" text-anchor="middle" font-style="normal">1 h</text>
+<text x="390" y="196" font-size="13" font-weight="bold" fill="#16a34a" text-anchor="middle" font-style="normal">8 h depois do fim</text>
+<text x="650" y="196" font-size="13" font-weight="bold" fill="#16a34a" text-anchor="middle" font-style="normal">8 h depois do fim</text>
+<text x="480" y="272" font-size="13" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="italic">/processar dispara um lote na hora; o relógio de 8 h recomeça quando ele termina.</text>
+</svg>

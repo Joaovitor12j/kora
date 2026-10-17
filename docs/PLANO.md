@@ -168,3 +168,5 @@ Implementação: `deploy/` (units, `install.sh`, `update-ytdlp.sh`), `status.py`
 - [ ] Usar o MVP por 2 semanas e ver se continuo mandando links.
 - [ ] Pedir a um assistente algo salvo há mais de uma semana e ele achar na primeira tentativa.
 
+## Próximos passos
+Detalhados no [README](../README.md#próximos-passos): interface configurável, orquestrador de IA com fallback, bot no WhatsApp, tradução para o idioma escolhido e interface para exibir os links salvos.

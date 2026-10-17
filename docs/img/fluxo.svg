@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="960" height="440" font-family="-apple-system, 'Segoe UI', 'DejaVu Sans', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Como a Kora funciona</title>
+<desc id="d">Telegram envia o link ao bot, que o grava numa fila SQLite; o worker, em lotes, extrai metadados e conteúdo, pede resumo e categoria à IA e grava a nota no vault do Obsidian, avisando no Telegram.</desc>
+<defs>
+<marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#57606a"/></marker>
+</defs>
+<rect x="0.5" y="0.5" width="959" height="439" rx="12" fill="#ffffff" stroke="#d0d7de"/>
+<path d="M660 70 V34 H105 V68" fill="none" stroke="#57606a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+<text x="382" y="26" font-size="13" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="italic">aviso no Telegram: “salvo em design: &lt;título&gt;”</text>
+<rect x="30" y="72" width="150" height="84" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.6"/>
+<text x="105.0" y="100" font-size="16" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Telegram</text>
+<text x="105.0" y="122" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">você manda o link</text>
+<rect x="215" y="72" width="150" height="84" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+<text x="290.0" y="100" font-size="16" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Bot</text>
+<text x="290.0" y="122" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">sempre ligado</text>
+<text x="290.0" y="139" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">sem links repetidos</text>
+<rect x="400" y="72" width="150" height="84" rx="10" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.6"/>
+<text x="475.0" y="100" font-size="16" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Fila</text>
+<text x="475.0" y="122" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">SQLite local</text>
+<text x="475.0" y="139" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">link, status, tentativas</text>
+<rect x="585" y="72" width="150" height="84" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/>
+<text x="660.0" y="100" font-size="16" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Worker</text>
+<text x="660.0" y="122" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">em lotes</text>
+<text x="660.0" y="139" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">(timer do systemd)</text>
+<rect x="770" y="72" width="160" height="84" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+<text x="850.0" y="100" font-size="16" font-weight="bold" fill="#1f2328" text-anchor="middle" font-style="normal">Vault</text>
+<text x="850.0" y="122" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">Obsidian</text>
+<text x="850.0" y="139" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="middle" font-style="normal">notas por categoria</text>
+<line x1="182" y1="114" x2="212" y2="114" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="367" y1="114" x2="397" y2="114" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="552" y1="114" x2="582" y2="114" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="737" y1="114" x2="767" y2="114" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="660" y1="158" x2="660" y2="208" stroke="#57606a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+<rect x="30" y="210" width="900" height="206" rx="12" fill="#f6f8fa" stroke="#d0d7de"/>
+<text x="50" y="238" font-size="15" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">Dentro de cada lote, para cada link</text>
+<rect x="50" y="258" width="195" height="130" rx="10" fill="#ffffff" stroke="#8c959f" stroke-width="1.4"/>
+<text x="64" y="285" font-size="14.5" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">1  Metadados</text>
+<text x="64" y="312" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">yt-dlp: título, autor,</text>
+<text x="64" y="331" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">legenda e data; plano B</text>
+<text x="64" y="350" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">para X, Instagram e web</text>
+<rect x="275" y="258" width="195" height="130" rx="10" fill="#ffffff" stroke="#8c959f" stroke-width="1.4"/>
+<text x="289" y="285" font-size="14.5" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">2  Conteúdo</text>
+<text x="289" y="312" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">legenda do site ou áudio</text>
+<text x="289" y="331" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">transcrito (Whisper local);</text>
+<text x="289" y="350" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">artigos via trafilatura</text>
+<rect x="500" y="258" width="195" height="130" rx="10" fill="#ffffff" stroke="#8c959f" stroke-width="1.4"/>
+<text x="514" y="285" font-size="14.5" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">3  IA</text>
+<text x="514" y="312" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">Anthropic, DeepSeek ou</text>
+<text x="514" y="331" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">Ollama: resumo, pontos-</text>
+<text x="514" y="350" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">chave, categoria e tags</text>
+<rect x="725" y="258" width="195" height="130" rx="10" fill="#ffffff" stroke="#8c959f" stroke-width="1.4"/>
+<text x="739" y="285" font-size="14.5" font-weight="bold" fill="#1f2328" text-anchor="start" font-style="normal">4  Nota</text>
+<text x="739" y="312" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">grava na pasta da</text>
+<text x="739" y="331" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">categoria e avisa no</text>
+<text x="739" y="350" font-size="12.5" font-weight="normal" fill="#57606a" text-anchor="start" font-style="normal">Telegram; sem IA: _inbox</text>
+<line x1="246" y1="323" x2="274" y2="323" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="471" y1="323" x2="499" y2="323" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+<line x1="696" y1="323" x2="724" y2="323" stroke="#57606a" stroke-width="1.8" marker-end="url(#seta)"/>
+</svg>
