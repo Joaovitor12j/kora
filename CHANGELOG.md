@@ -1,0 +1,51 @@
+# Changelog
+
+Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
+[Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
+[Versionamento Semântico](https://semver.org/lang/pt-BR/).
+
+## [0.1.0] - 2026-10-17
+
+Primeira versão: o fluxo completo funciona, do link no Telegram até a nota no Obsidian.
+
+### Adicionado
+
+- **Bot do Telegram** (long polling), restrito a um único chat. Os links entram numa fila SQLite, sem
+  repetição (URL canônica, com links encurtados resolvidos e parâmetros de rastreio removidos).
+- **Extração de conteúdo**
+  - `yt-dlp` com impersonação de navegador (Instagram Reels, TikTok, X, YouTube).
+  - Texto completo de tweets longos pela API pública do FixTweet.
+  - Posts de foto do Instagram pelas tags públicas da página.
+  - Artigos e páginas comuns com `trafilatura`.
+- **Transcrição local** com `faster-whisper` (modelo `small`, CPU): usa a legenda do próprio site quando
+  existe, baixa só o áudio quando não existe e apaga o arquivo em seguida. Vídeos acima de
+  `MAX_AUDIO_MINUTES` ficam só com a legenda.
+- **Categorização com IA** com provedores `anthropic`, `deepseek` e `ollama` (um ativo por vez, via
+  `LLM_PROVIDER`). A IA devolve título, resumo, pontos-chave, categoria e tags em JSON validado, com 10
+  categorias fixas e uma regra de desempate.
+- **Notas no Obsidian** em `Referencias/Salvos/<categoria>/`, com frontmatter, resumo, pontos-chave,
+  legenda original e transcrição em bloco recolhido. Sem IA disponível, a nota fica em `_inbox/` com
+  `status: pendente`.
+- **Comandos do bot:** `/buscar` (todos os termos, sem acento), `/status` e `/processar`; correção de
+  categoria respondendo `categoria: X` ao aviso do bot.
+- **`kora-reclassify`:** reprocessa as notas pendentes, preservando a data de criação e categorias
+  definidas à mão.
+- **Índice `Salvos.md`** com consultas Dataview, criado uma única vez no vault.
+- **Execução automática** no `systemd --user`: bot sempre ligado; worker em lotes (`kora-worker --once`)
+  disparados por timer, 1 hora depois de ligar o computador e 8 horas após o fim de cada lote; timer diário
+  que atualiza o `yt-dlp`; `deploy/install.sh` para instalar e remover.
+- **Retentativas:** 3 tentativas com espera crescente; depois disso o item fica como `falhou` e o bot avisa.
+- **Logs** sem o token do bot (as bibliotecas de HTTP ficam silenciadas) e batimento do worker contínuo.
+- **README** completo, com imagens e os próximos passos, e [docs/PLANO.md](docs/PLANO.md) com as decisões
+  e os resultados da validação técnica.
+
+### Limitações conhecidas
+
+- Os avisos "salvo em …" chegam quando o lote roda (até 8 horas); `/processar` roda um lote na hora.
+- O Telegram guarda mensagens não lidas por 24 horas: com o bot parado por mais tempo, links se perdem.
+- Carrossel `/photo/` do TikTok não é suportado; o YouTube pode exigir login (anti-bot).
+- Só o Ollama foi validado de ponta a ponta com um provedor real; Anthropic e DeepSeek estão cobertos por
+  testes com respostas simuladas.
+- Um provedor de IA por vez, sem fallback automático.
+
+[0.1.0]: https://github.com/Joaovitor12j/kora/releases/tag/v0.1.0
