@@ -2,8 +2,9 @@ import asyncio
 import logging
 
 from telegram import Update
-from telegram.ext import Application, ContextTypes, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
+from .busca import buscar, formatar
 from .config import get_settings
 from .correcao import corrigir_categoria, pedido_de_categoria
 from .db import CONCLUIDO, FALHOU, Queue
@@ -46,6 +47,17 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await msg.reply_text("\n".join(replies), disable_web_page_preview=True)
 
 
+async def on_buscar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    msg = update.effective_message
+    consulta = " ".join(context.args).strip()
+    if not consulta:
+        await msg.reply_text("Uso: /buscar <termos>. Ex.: /buscar motion claude")
+        return
+    # Lê as notas do vault; fora do loop para não travar o bot.
+    resultados = await asyncio.to_thread(buscar, context.application.bot_data["settings"], consulta)
+    await msg.reply_text(formatar(resultados, consulta), disable_web_page_preview=True)
+
+
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     settings = get_settings()
@@ -53,6 +65,7 @@ def main() -> None:
     app.bot_data["queue"] = Queue(settings.db_path)
     app.bot_data["settings"] = settings
     only_me = filters.Chat(chat_id=settings.telegram_allowed_chat_id)
+    app.add_handler(CommandHandler("buscar", on_buscar, filters=only_me))
     app.add_handler(MessageHandler(only_me & filters.TEXT & ~filters.COMMAND, on_message))
     log.info("bot iniciado (long polling)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)

@@ -130,10 +130,12 @@ Provedores (`src/kora/llm/`), um ativo por vez via `LLM_PROVIDER`: `anthropic` (
 **Depois:** orquestrador que combina provedores (fallback em cadeia, comparação, roteamento por tipo de conteúdo). A interface `Provider.complete()` já permite encaixá-lo sem mudar os provedores.
 
 ## Fase 4 — Busca pelos assistentes
-- [ ] Nota índice `Referencias/Salvos/Salvos.md` com Dataview (por categoria, plataforma, data).
-- [ ] Instrução no `CLAUDE.md` do vault: "para coisas salvas, procurar em `Referencias/Salvos/` por frontmatter e texto".
+- [x] Nota índice `Referencias/Salvos/Salvos.md` com Dataview (por categoria, plataforma, data).
+- [x] Instrução no `CLAUDE.md` do vault: "para coisas salvas, procurar em `Referencias/Salvos/` por frontmatter e texto".
 - [ ] Se o volume passar de algumas centenas: embeddings locais (`sqlite-vec`) + servidor MCP com uma ferramenta `buscar_salvos(pergunta)`.
-- [ ] Opcional: comando `/buscar <termo>` no próprio bot.
+- [x] Comando `/buscar <termo>` no próprio bot.
+
+Busca atual: varredura simples dos arquivos (todos os termos, sem acento, com pesos por campo), suficiente até algumas centenas de notas. Embeddings/MCP continuam adiados até o volume pedir.
 
 ## Fase 5 — Robustez
 - [ ] Rodar bot e worker como serviço `systemd --user` (sobe com a máquina).

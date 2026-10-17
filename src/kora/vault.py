@@ -139,9 +139,12 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
         categoria=_campo(cab, "categoria"),
         tags=[t.strip() for t in tags.split(",") if t.strip()],
         criado=_campo(cab, "criado"),
+        ia=_json_ou_texto(_campo(cab, "ia")),
     )
     secoes = {nome.strip(): corpo_secao.strip("\n") for nome, corpo_secao in
               re.findall(r"^## (.+?)\n(.*?)(?=^## |\Z)", corpo, re.M | re.S)}
+    meta.resumo = secoes.get("Resumo", "")
+    meta.pontos_chave = [l[2:].strip() for l in secoes.get("Pontos-chave", "").splitlines() if l.startswith("- ")]
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
     if "Conteúdo" in secoes:

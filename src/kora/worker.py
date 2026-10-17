@@ -6,6 +6,7 @@ from .config import Settings, get_settings
 from .db import FALHOU, Item, Queue
 from .classificar import classificar
 from .extractors.meta import Meta, fetch_meta
+from .indice import garantir_indice
 from .llm import Provider, build_provider
 from .media import attach_transcript
 from .telegram_api import send_message
@@ -73,6 +74,8 @@ def main() -> None:
     settings = get_settings()
     queue = Queue(settings.db_path)
     provider = build_provider(settings)
+    if garantir_indice(settings):
+        log.info("índice Salvos.md criado")
     log.info("IA: %s", provider.label if provider else "desligada")
     log.info("retomando %s item(ns) interrompido(s)", queue.requeue_stuck())
     log.info("worker iniciado")
