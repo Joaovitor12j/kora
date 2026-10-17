@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block titulo %}Fila · Kora{% endblock %}
+{% block conteudo %}
+<div class="folha estreita">
+  <header class="cabeca-folha">
+    <h1>Fila</h1>
+    <p class="situacao">
+      {% for linha in worker %}<span>{{ linha }}</span>{% endfor %}
+      <span>IA: {{ ia }}</span>
+    </p>
+    <div class="acoes">
+      <button class="botao primario" type="button" id="processar" {% if rodando %}disabled{% endif %}>{{ "Lote rodando" if rodando else "Processar agora" }}</button>
+    </div>
+  </header>
+
+  <section class="bloco">
+    <h2>Em andamento <span class="n">{{ itens[PROCESSANDO]|length }}</span></h2>
+    {% for i in itens[PROCESSANDO] %}
+    <div class="item"><span class="url">{{ i.url_canonica }}</span><span class="detalhe">{{ i.plataforma }}, tentativa {{ i.tentativas + 1 }}</span></div>
+    {% else %}<p class="mudo">Nenhum link sendo processado.</p>{% endfor %}
+  </section>
+
+  <section class="bloco">
+    <h2>Aguardando o lote <span class="n">{{ contagem.get(NA_FILA, 0) }}</span></h2>
+    {% for i in itens[NA_FILA] %}
+    <div class="item"><span class="url">{{ i.url_canonica }}</span><span class="detalhe">{{ i.plataforma }}{% if i.tentativas %}, {{ i.tentativas }} tentativa(s) anterior(es){% endif %}</span></div>
+    {% else %}<p class="mudo">Fila vazia. Mande um link para o bot e ele aparece aqui.</p>{% endfor %}
+    {% if contagem.get(NA_FILA, 0) > itens[NA_FILA]|length %}<p class="mudo">Mostrando os {{ itens[NA_FILA]|length }} mais antigos.</p>{% endif %}
+  </section>
+
+  <section class="bloco">
+    <h2>Falharam <span class="n">{{ contagem.get(FALHOU, 0) }}</span></h2>
+    {% for i in itens[FALHOU] %}
+    <div class="item erro"><span class="url">{{ i.url_canonica }}</span><span class="detalhe">{{ i.erro or "sem detalhe" }}</span></div>
+    {% else %}<p class="mudo">Nenhuma falha.</p>{% endfor %}
+    {% if itens[FALHOU] %}<p class="mudo">Para tentar de novo, mande o link outra vez ao bot.</p>{% endif %}
+  </section>
+
+  <section class="bloco">
+    <h2>Notas aguardando IA <span class="n">{{ pendentes|length }}</span></h2>
+    {% for e in pendentes if e %}
+    <div class="item"><span class="url">{{ e.meta.titulo }}</span><span class="detalhe">{{ e.meta.plataforma }}</span></div>
+    {% else %}<p class="mudo">Todas as notas foram classificadas.</p>{% endfor %}
+    {% if pendentes %}<p class="mudo">Com a IA ligada, <code>kora-reclassify</code> reprocessa estas notas.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/fila.js"></script>{% endblock %}

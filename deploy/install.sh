@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Instala (ou remove) os serviços do Kora no systemd do usuário.
-#   deploy/install.sh              instala e inicia o bot e os timers (lotes do worker e yt-dlp)
+#   deploy/install.sh              instala e inicia o bot, a interface web e os timers (lotes do worker e yt-dlp)
 #   deploy/install.sh uninstall    para e remove
 # Antes, pare o bot e o worker que estiverem rodando em terminais: dois bots com o
 # mesmo token disputam as mensagens do Telegram. O worker roda em lotes (kora-worker.timer):
@@ -9,7 +9,7 @@ set -euo pipefail
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 DESTINO="$HOME/.config/systemd/user"
-UNITS=(kora-bot.service kora-worker.timer kora-ytdlp-update.timer)
+UNITS=(kora-bot.service kora-web.service kora-worker.timer kora-ytdlp-update.timer)
 
 if [ "${1:-}" = "uninstall" ]; then
     systemctl --user disable --now "${UNITS[@]}" kora-worker.service kora-ytdlp-update.service 2>/dev/null || true
@@ -31,6 +31,7 @@ done
 systemctl --user daemon-reload
 systemctl --user enable --now "${UNITS[@]}"
 
-echo "instalado. Status:   systemctl --user status kora-bot kora-worker"
+echo "instalado. Status:   systemctl --user status kora-bot kora-web kora-worker"
+echo "Interface:          http://127.0.0.1:8765"
 echo "Logs:                journalctl --user -u kora-worker -f"
 echo "Subir sem login:     loginctl enable-linger $USER   (opcional)"

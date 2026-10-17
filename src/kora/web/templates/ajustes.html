@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block titulo %}Ajustes · Kora{% endblock %}
+{% block conteudo %}
+{% macro campo(rotulo, nome, valor, ajuda="", tipo="text", extra="") %}
+<div class="campo">
+  <label for="c-{{ nome }}">{{ rotulo }}</label>
+  <input id="c-{{ nome }}" type="{{ tipo }}" name="{{ nome }}" value="{{ valor }}" {{ extra|safe }} autocomplete="off" spellcheck="false">
+  {% if ajuda %}<p class="ajuda">{{ ajuda }}</p>{% endif %}
+</div>
+{% endmacro %}
+{% macro chave(rotulo, nome, salva) %}
+<div class="campo">
+  <label for="c-{{ nome }}">{{ rotulo }}</label>
+  <input id="c-{{ nome }}" type="password" name="{{ nome }}" value="" data-segredo
+         placeholder="{{ 'Chave salva. Digite só para trocar.' if salva else 'Cole a chave aqui' }}" autocomplete="new-password" spellcheck="false">
+  <p class="ajuda">A chave fica só no .env desta máquina e a tela nunca a mostra.</p>
+</div>
+{% endmacro %}
+
+<div class="ajustes">
+  <nav class="indice" aria-label="Seções dos ajustes">
+    <a href="#ia">Inteligência artificial</a>
+    <a href="#lotes">Lotes</a>
+    <a href="#limites">Transcrição e limites</a>
+    <a href="#categorias">Categorias</a>
+  </nav>
+
+  <form class="folha" id="form-ajustes" novalidate>
+    <header class="cabeca-folha"><h1>Ajustes</h1>
+      <p class="situacao"><span>Salvar grava o .env e reinicia o bot. O próximo lote já usa os valores novos.</span></p>
+    </header>
+
+    <section class="bloco" id="ia">
+      <h2>Inteligência artificial</h2>
+      <fieldset class="segmentos">
+        <legend>Provedor que resume e classifica os links</legend>
+        {% for valor, rotulo in [("", "Desligada"), ("anthropic", "Anthropic"), ("deepseek", "DeepSeek"), ("ollama", "Ollama, local")] %}
+        <label><input type="radio" name="LLM_PROVIDER" value="{{ valor }}" {% if a.provedor == valor %}checked{% endif %}><span>{{ rotulo }}</span></label>
+        {% endfor %}
+      </fieldset>
+
+      <div class="painel-provedor" data-provedor="">
+        <p class="mudo">Sem IA, as notas ficam em <code>_inbox</code> com o texto bruto e status pendente. Dá para ligar uma IA depois e reprocessar.</p>
+      </div>
+      <div class="painel-provedor" data-provedor="anthropic">
+        {{ campo("Modelo", "ANTHROPIC_MODEL", a.anthropic_model) }}
+        {{ chave("Chave de API da Anthropic", "ANTHROPIC_API_KEY", a.chaves.ANTHROPIC_API_KEY) }}
+      </div>
+      <div class="painel-provedor" data-provedor="deepseek">
+        {{ campo("Modelo", "DEEPSEEK_MODEL", a.deepseek_model) }}
+        {{ chave("Chave de API da DeepSeek", "DEEPSEEK_API_KEY", a.chaves.DEEPSEEK_API_KEY) }}
+      </div>
+      <div class="painel-provedor" data-provedor="ollama">
+        {{ campo("Endereço do Ollama", "OLLAMA_BASE_URL", a.ollama_base_url) }}
+        {{ campo("Modelo", "OLLAMA_MODEL", a.ollama_model, "Os modelos instalados aparecem como sugestão.", "text", 'list="modelos-ollama"') }}
+        <datalist id="modelos-ollama"></datalist>
+      </div>
+
+      <div class="teste">
+        <button class="botao" type="button" id="testar">Testar conexão</button>
+        <p id="resultado-teste" class="resultado" role="status"></p>
+      </div>
+    </section>
+
+    <section class="bloco" id="lotes">
+      <h2>Lotes</h2>
+      <p class="mudo">O bot só enfileira. O worker processa a fila em lotes, para a transcrição não disputar a CPU o dia todo. Os dois tempos contam só com o computador ligado.</p>
+      <div class="par">
+        {{ campo("Primeiro lote, minutos depois de ligar", "lotes.primeiro_min", a.lotes.primeiro_min, "", "number", 'min="1" max="1440" inputmode="numeric"') }}
+        {{ campo("Intervalo entre lotes, em horas", "lotes.intervalo_h", a.lotes.intervalo_h, "Conta a partir do fim do lote anterior.", "number", 'min="1" max="168" inputmode="numeric"') }}
+      </div>
+    </section>
+
+    <section class="bloco" id="limites">
+      <h2>Transcrição e limites</h2>
+      <div class="par">
+        <div class="campo">
+          <label for="c-WHISPER_MODEL">Modelo de transcrição</label>
+          <select id="c-WHISPER_MODEL" name="WHISPER_MODEL">
+            {% for m in a.whisper_modelos %}<option value="{{ m }}" {% if m == a.whisper_model %}selected{% endif %}>{{ m }}</option>{% endfor %}
+          </select>
+          <p class="ajuda">Maior transcreve melhor e demora mais.</p>
+        </div>
+        {{ campo("Idioma do áudio", "WHISPER_LANGUAGE", a.whisper_language, "Código como pt ou en. Vazio detecta sozinho.") }}
+      </div>
+      <div class="par">
+        {{ campo("Duração máxima do áudio, em minutos", "MAX_AUDIO_MINUTES", a.max_audio_minutes, "Vídeos mais longos ficam só com a legenda.", "number", 'min="1" max="600" inputmode="numeric"') }}
+        {{ campo("Texto enviado à IA, em caracteres", "LLM_MAX_CHARS", a.llm_max_chars, "Limita custo e contexto.", "number", 'min="1000" max="100000" step="1000" inputmode="numeric"') }}
+      </div>
+      {{ campo("Tempo limite da IA, em segundos", "LLM_TIMEOUT", a.llm_timeout, "", "number", 'min="5" max="600" inputmode="numeric"') }}
+    </section>
+
+    <section class="bloco" id="categorias">
+      <h2>Categorias</h2>
+      <p class="mudo">A IA escolhe uma destas e usa a descrição para decidir. Cada nome vira uma pasta no vault. Renomear ou remover não move as notas já salvas.</p>
+      <ol class="categorias" id="lista-categorias">
+        {% for c in a.categorias %}
+        <li class="cat" {% if c.nome == a.fallback %}data-fixa{% endif %}>
+          <input type="text" class="cat-nome" value="{{ c.nome }}" aria-label="Nome da categoria" {% if c.nome == a.fallback %}readonly{% endif %} spellcheck="false">
+          <input type="text" class="cat-desc" value="{{ c.descricao }}" aria-label="O que entra em {{ c.nome }}" spellcheck="false">
+          {% if c.nome == a.fallback %}<span class="fixa">Sempre existe</span>
+          {% else %}<button type="button" class="remover" aria-label="Remover {{ c.nome }}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>{% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+      <button class="botao" type="button" id="nova-categoria">Adicionar categoria</button>
+    </section>
+
+    <div class="barra" id="barra" hidden>
+      <p id="barra-texto">Alterações não salvas</p>
+      <button class="botao" type="button" id="descartar">Descartar</button>
+      <button class="botao primario" type="submit" id="salvar">Salvar e aplicar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/ajustes.js"></script>{% endblock %}

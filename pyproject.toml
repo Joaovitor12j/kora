@@ -13,6 +13,9 @@ dependencies = [
     "faster-whisper>=1.1",
     "anthropic>=1",
     "av<16",  # PyAV 19 quebra o faster-whisper (metadata_errors)
+    "starlette>=1.8.0",
+    "jinja2>=3.1.6",
+    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]
@@ -22,6 +25,7 @@ dev = ["pytest>=8"]
 kora-bot = "kora.bot:main"
 kora-worker = "kora.worker:main"
 kora-reclassify = "kora.reclassificar:main"
+kora-web = "kora.web.app:main"
 
 [build-system]
 requires = ["hatchling"]

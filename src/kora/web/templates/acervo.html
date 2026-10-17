@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% from "_sigilo.html" import sigilo %}
+{% block titulo %}Salvos · Kora{% endblock %}
+{% block conteudo %}
+{% macro linha(e) %}
+<a class="linha" href="/nota?p={{ e.rel|urlencode }}" data-nota="{{ e.rel }}">
+  <span class="tile">{{ sigilo(e.meta.categoria, 30) }}</span>
+  <span class="texto">
+    <span class="titulo">{{ e.meta.titulo }}</span>
+    <span class="resumo">{{ e.pagina or "Sem resumo: a IA ainda não leu este link." }}</span>
+    <span class="meta">
+      {% if e.meta.autor %}<span>{{ e.meta.autor }}</span>{% endif %}
+      <span>{{ e.meta.plataforma }}</span>
+      {% for t in e.meta.tags[:4] %}<span class="tag">{{ t }}</span>{% endfor %}
+    </span>
+  </span>
+  <span class="lado">
+    {% if e.pendente %}<span class="pendente">aguardando IA</span>{% endif %}
+    {% if f.q %}<time datetime="{{ e.data }}">{{ e.data|data_br }}</time>{% endif %}
+  </span>
+</a>
+{% endmacro %}
+
+<div class="cabeca-pagina">
+  <img class="retrato" src="/static/kora.webp" width="512" height="512" alt="" aria-hidden="true">
+  <form class="busca" id="busca" role="search" method="get" action="/">
+    <input type="search" name="q" value="{{ f.q }}" placeholder="Buscar por título, autor, tag ou trecho" aria-label="Buscar nos links salvos" autocomplete="off" spellcheck="false">
+    <kbd aria-hidden="true">/</kbd>
+    {% for nome, valor in [("c", f.categoria), ("p", f.plataforma), ("t", f.tag), ("d", f.dias or ""), ("pend", "1" if f.pendentes else "")] if valor %}
+    <input type="hidden" name="{{ nome }}" value="{{ valor }}">
+    {% endfor %}
+  </form>
+</div>
+
+<div class="miolo" id="miolo">
+  <nav class="filtros" aria-label="Filtros">
+    <section>
+      <h2>Categorias</h2>
+      <ul>
+        <li><a href="{{ link(c='', pend='') }}" {% if not f.categoria and not f.pendentes %}aria-current="true"{% endif %}><span class="rot">Todas</span><span class="n">{{ fac.total }}</span></a></li>
+        {% for nome, n in fac.categorias %}
+        <li><a href="{{ link(c='' if f.categoria == nome else nome, pend='') }}" {% if f.categoria == nome %}aria-current="true"{% endif %}>{{ sigilo(nome, 20) }}<span class="rot">{{ nome }}</span><span class="n">{{ n }}</span></a></li>
+        {% endfor %}
+        {% if fac.pendentes %}
+        <li><a class="alerta" href="{{ link(pend='' if f.pendentes else '1', c='') }}" {% if f.pendentes %}aria-current="true"{% endif %}>{{ sigilo('', 20) }}<span class="rot">Sem categoria</span><span class="n">{{ fac.pendentes }}</span></a></li>
+        {% endif %}
+      </ul>
+    </section>
+    {% if fac.plataformas %}
+    <section>
+      <h2>Plataforma</h2>
+      <ul>
+        {% for nome, n in fac.plataformas %}
+        <li><a href="{{ link(p='' if f.plataforma == nome else nome) }}" {% if f.plataforma == nome %}aria-current="true"{% endif %}><span class="rot">{{ nome }}</span><span class="n">{{ n }}</span></a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    <section>
+      <h2>Período</h2>
+      <ul>
+        {% for dias, rotulo in [(7, "Últimos 7 dias"), (30, "Últimos 30 dias"), (365, "Último ano")] %}
+        <li><a href="{{ link(d='' if f.dias == dias else dias) }}" {% if f.dias == dias %}aria-current="true"{% endif %}><span class="rot">{{ rotulo }}</span></a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% if fac.tags %}
+    <section>
+      <h2>Tags</h2>
+      <p class="nuvem">
+        {% for nome, n in fac.tags %}<a class="tag" href="{{ link(t='' if f.tag == nome else nome) }}" {% if f.tag == nome %}aria-current="true"{% endif %}>{{ nome }}</a>{% endfor %}
+      </p>
+    </section>
+    {% endif %}
+  </nav>
+
+  <section class="fluxo" aria-label="Links salvos">
+    <p class="contagem">
+      {% if f.ativo() %}<strong>{{ total_filtrado }}</strong> de {{ fac.total }} links
+      {% else %}<strong>{{ fac.total }}</strong> {{ "link salvo" if fac.total == 1 else "links salvos" }}{% endif %}
+      {% if f.ativo() %}<a class="limpar" href="/">Limpar filtros</a>{% endif %}
+    </p>
+
+    {% if not total_filtrado %}
+    <div class="vazio">
+      {% if fac.total == 0 %}
+      <h2>Nada salvo ainda</h2>
+      <p>Mande um link para o bot no Telegram. Quando o lote rodar, a nota aparece aqui.</p>
+      {% else %}
+      <h2>Nenhum link com esses filtros</h2>
+      <p>Tire um filtro ou busque por outro termo.</p>
+      <a class="botao" href="/">Limpar filtros</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% for rotulo, itens in grupos %}
+    <section class="dia">
+      <h2>{{ rotulo }}</h2>
+      {% for e in itens %}{{ linha(e) }}{% endfor %}
+    </section>
+    {% endfor %}
+    {% if lista %}<div class="dia">{% for e in lista %}{{ linha(e) }}{% endfor %}</div>{% endif %}
+
+    {% if mais %}<a class="mais" href="{{ mais }}">Mostrar mais</a>{% endif %}
+  </section>
+</div>
+
+<div class="fundo-gaveta" id="fundo-gaveta" hidden></div>
+<aside class="gaveta" id="gaveta" role="dialog" aria-modal="true" aria-labelledby="gaveta-titulo" hidden>
+  <button class="fechar" type="button" id="fechar-gaveta" aria-label="Fechar">
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3 13 13M13 3 3 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <div id="gaveta-corpo"></div>
+</aside>
+{% endblock %}
+{% block scripts %}<script src="/static/acervo.js"></script>{% endblock %}

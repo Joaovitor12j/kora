@@ -1,0 +1,29 @@
+{#- Sigilos: traço fino, geometria dos grafismos do rosto da Kora. Cor vem do CSS (currentColor). -#}
+{% macro sigilo(categoria, tam=40) -%}
+{%- set k = sigilo_chave(categoria) -%}
+<svg class="sigilo" viewBox="0 0 48 48" width="{{ tam }}" height="{{ tam }}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+{%- if k == "cruz" -%}
+  <path d="M24 4 44 24 24 44 4 24Z"/><path d="M14 14 34 34M34 14 14 34"/><path d="M24 17 31 24 24 31 17 24Z"/>
+{%- elif k == "orbita" -%}
+  <ellipse cx="24" cy="24" rx="20" ry="8" transform="rotate(-32 24 24)"/><ellipse cx="24" cy="24" rx="20" ry="8" transform="rotate(32 24 24)"/><circle cx="24" cy="24" r="3" fill="currentColor"/><circle cx="41" cy="12" r="1.6" fill="currentColor"/>
+{%- elif k == "espiral" -%}
+  <path d="M6 6H42V42H12V16H36V36H18V24H30"/>
+{%- elif k == "degraus" -%}
+  <path d="M10 16 24 5 38 16M6 29 24 14 42 29M6 43 24 27 42 43"/>
+{%- elif k == "moeda" -%}
+  <circle cx="24" cy="24" r="19"/><path d="M24 10 38 24 24 38 10 24Z"/><circle cx="24" cy="24" r="2.5" fill="currentColor"/>
+{%- elif k == "pulso" -%}
+  <circle cx="24" cy="24" r="20"/><path d="M8 25H16L20 14 27 35 31 25H40"/>
+{%- elif k == "telhado" -%}
+  <path d="M5 22 24 6 43 22"/><path d="M11 19V42H37V19"/><path d="M20 42V30H28V42"/>
+{%- elif k == "chama" -%}
+  <path d="M24 4C31 14 38 21 38 31 38 38.5 31.5 44 24 44 16.5 44 10 38.5 10 31 10 24 15 20 18 13 20 19 22 20 24 4Z"/><path d="M24 44C20 44 17 41 17 37 17 32 21 30 24 25 27 30 31 32 31 37 31 41 28 44 24 44Z"/>
+{%- elif k == "sorriso" -%}
+  <circle cx="24" cy="24" r="19"/><circle cx="17" cy="19" r="1.8" fill="currentColor"/><circle cx="31" cy="19" r="1.8" fill="currentColor"/><path d="M14 28Q24 39 34 28"/>
+{%- elif k == "ponto" -%}
+  <path d="M24 4 41 14V34L24 44 7 34V14Z"/><circle cx="24" cy="24" r="3" fill="currentColor"/>
+{%- else -%}
+  <path d="M15 5H33V43L24 35 15 43Z"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}

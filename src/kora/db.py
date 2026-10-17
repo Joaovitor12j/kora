@@ -192,6 +192,12 @@ class Queue:
         row = self._conn.execute("SELECT * FROM itens WHERE id = ?", (item_id,)).fetchone()
         return self._item(row) if row else None
 
+    def listar(self, status: str, limite: int = 50) -> list[Item]:
+        """Itens num estado, do mais antigo para o mais novo (a ordem em que a fila anda)."""
+        rows = self._conn.execute(
+            "SELECT * FROM itens WHERE status = ? ORDER BY criado_em LIMIT ?", (status, limite)).fetchall()
+        return [self._item(r) for r in rows]
+
     def counts(self) -> dict[str, int]:
         rows = self._conn.execute("SELECT status, COUNT(*) n FROM itens GROUP BY status").fetchall()
         return {r["status"]: r["n"] for r in rows}

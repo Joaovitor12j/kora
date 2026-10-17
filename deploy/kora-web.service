@@ -1,0 +1,14 @@
+[Unit]
+Description=Kora — interface web local (galeria, fila e ajustes)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@REPO@
+ExecStart=@REPO@/.venv/bin/kora-web
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

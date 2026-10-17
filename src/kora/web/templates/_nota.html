@@ -1,0 +1,53 @@
+{% from "_sigilo.html" import sigilo %}
+{% set m = e.meta %}
+<article class="nota" data-p="{{ e.rel }}">
+  <header class="nota-cabeca">
+    <span class="tile grande">{{ sigilo(m.categoria, 46) }}</span>
+    <div>
+      <p class="nota-categoria">{{ m.categoria or "Sem categoria" }}{% if e.pendente %} <span class="pendente">aguardando IA</span>{% endif %}</p>
+      <h2 id="gaveta-titulo">{{ m.titulo }}</h2>
+    </div>
+  </header>
+
+  <dl class="ficha">
+    {% if m.autor %}<div><dt>Autor</dt><dd>{{ m.autor }}</dd></div>{% endif %}
+    <div><dt>Plataforma</dt><dd>{{ m.plataforma }}</dd></div>
+    {% if m.publicado %}<div><dt>Publicado</dt><dd>{{ m.publicado|data_br }}</dd></div>{% endif %}
+    <div><dt>Salvo em</dt><dd>{{ e.data|data_br }}</dd></div>
+    {% if m.ia %}<div><dt>Resumido por</dt><dd>{{ m.ia }}</dd></div>{% endif %}
+  </dl>
+
+  {% if m.resumo %}
+  <section><h3>Resumo</h3><p class="corrido">{{ m.resumo }}</p></section>
+  {% else %}
+  <section><h3>Resumo</h3><p class="mudo">A IA ainda não leu este link. Rode <code>kora-reclassify</code> ou espere o próximo lote.</p></section>
+  {% endif %}
+
+  {% if m.pontos_chave %}
+  <section><h3>Pontos-chave</h3><ul class="pontos">{% for p in m.pontos_chave %}<li>{{ p }}</li>{% endfor %}</ul></section>
+  {% endif %}
+
+  {% if m.tags %}
+  <p class="nuvem">{% for t in m.tags %}<a class="tag" href="/?t={{ t|urlencode }}">{{ t }}</a>{% endfor %}</p>
+  {% endif %}
+
+  {% if m.descricao %}
+  <details><summary>Legenda original</summary><p class="corrido texto-longo">{{ m.descricao }}</p></details>
+  {% endif %}
+  {% if m.conteudo %}
+  <details><summary>{{ {"artigo": "Conteúdo do artigo", "transcricao": "Transcrição do áudio"}.get(m.conteudo_tipo, "Legenda do vídeo") }}</summary><p class="corrido texto-longo">{{ m.conteudo }}</p></details>
+  {% endif %}
+
+  <footer class="nota-rodape">
+    {% if m.url.startswith(("http://", "https://")) %}
+    <a class="botao primario" href="{{ m.url }}" target="_blank" rel="noopener noreferrer">Abrir original</a>
+    {% endif %}
+    <label class="mover">
+      <span>Mover para</span>
+      <select data-mover="{{ e.rel }}" aria-label="Mover para outra categoria">
+        {% if not m.categoria %}<option value="" selected disabled>escolha</option>{% endif %}
+        {% for c in categorias %}<option value="{{ c }}" {% if c == m.categoria %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+  </footer>
+</article>

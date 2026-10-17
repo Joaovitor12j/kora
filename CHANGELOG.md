@@ -4,6 +4,18 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+
+- **Interface web local** (`kora-web`, em `http://127.0.0.1:8765`, serviço `kora-web.service`):
+  - **Salvos:** galeria com busca ao digitar, filtros (categoria, plataforma, período, tag), painel de detalhes
+    e troca de categoria.
+  - **Fila:** em andamento, aguardando, falhas e notas sem IA, com "Processar agora".
+  - **Ajustes:** provedor e modelo de IA com teste de conexão, chaves de API (só gravação), intervalo dos lotes,
+    transcrição, limites e categorias. Salvar reescreve o `.env`, o drop-in do timer e reinicia o bot.
+- Categorias configuráveis: passam a ser lidas de `data/categorias.json` (as de fábrica continuam como padrão).
+
 ## [0.1.0] - 2026-10-17
 
 Primeira versão: o fluxo completo funciona, do link no Telegram até a nota no Obsidian.

@@ -169,4 +169,4 @@ Implementação: `deploy/` (units, `install.sh`, `update-ytdlp.sh`), `status.py`
 - [ ] Pedir a um assistente algo salvo há mais de uma semana e ele achar na primeira tentativa.
 
 ## Próximos passos
-Detalhados no [README](../README.md#próximos-passos): interface configurável, orquestrador de IA com fallback, bot no WhatsApp, tradução para o idioma escolhido e interface para exibir os links salvos.
+Detalhados no [README](../README.md#próximos-passos): orquestrador de IA com fallback, bot no WhatsApp e tradução para o idioma escolhido. A interface configurável e a galeria dos links salvos já existem (veja [Interface web](../README.md#interface-web)).

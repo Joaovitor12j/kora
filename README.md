@@ -15,6 +15,7 @@ assistentes de IA consultarem).
 - [Ferramentas disponíveis](#ferramentas-disponíveis)
 - [Instalação e configuração](#instalação-e-configuração)
 - [Provedores de IA](#provedores-de-ia)
+- [Interface web](#interface-web)
 - [Rodando no dia a dia](#rodando-no-dia-a-dia)
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Desenvolvimento](#desenvolvimento)
@@ -114,7 +115,8 @@ transcrição. Reprocessar o mesmo link sobrescreve a mesma nota, não cria cóp
 
 **Regra de desempate:** a categoria é o assunto principal do que o conteúdo *ensina*; a ferramenta usada vira
 tag. "Claude faz motion graphics" vai para `design` com a tag `ia`; "os 10 repositórios do GitHub para agentes"
-vai para `IA` com a tag `github`. A lista fica em `src/kora/taxonomia.py`.
+vai para `IA` com a tag `github`. A lista de fábrica fica em `src/kora/taxonomia.py`; ao editar as categorias na
+[interface web](#interface-web), ela passa a vir de `data/categorias.json`.
 
 ## Ferramentas disponíveis
 
@@ -138,6 +140,7 @@ vai para `IA` com a tag `github`. A lista fica em `src/kora/taxonomia.py`.
 | `uv run kora-bot` | Inicia o bot (long polling) |
 | `uv run kora-worker --once` | Roda **um lote**: esvazia a fila e sai (é o que o timer executa) |
 | `uv run kora-worker` | Worker contínuo, em loop (útil em desenvolvimento) |
+| `uv run kora-web [--porta N]` | Interface web local em `http://127.0.0.1:8765`: galeria, fila e ajustes |
 | `uv run kora-reclassify [--limit N]` | Reprocessa notas com `status: pendente` (a IA estava fora do ar ou desligada). Mantém a data de criação e respeita categoria definida à mão. Para depois de 3 falhas seguidas do provedor |
 
 ### Serviços e scripts (`deploy/`)
@@ -146,6 +149,7 @@ vai para `IA` com a tag `github`. A lista fica em `src/kora/taxonomia.py`.
 |---|---|
 | `install.sh` / `install.sh uninstall` | Instala (ou remove) os serviços no `systemd --user`. Migra o worker contínuo antigo |
 | `kora-bot.service` | Bot sempre ligado, com reinício automático em falha |
+| `kora-web.service` | Interface web local, sempre ligada |
 | `kora-worker.service` + `kora-worker.timer` | Lote do worker: 1 h após o boot, depois 8 h após o fim de cada lote |
 | `kora-ytdlp-update.timer` | Atualiza o `yt-dlp` todo dia (os sites mudam e quebram versões antigas) |
 | `update-ytdlp.sh` | O que o timer acima executa. Com `KORA_YTDLP_NIGHTLY=1` segue as versões nightly |
@@ -217,7 +221,33 @@ vira `outros`, tags são normalizadas e resumo vazio é rejeitado.
 
 Se a chave faltar ou o nome estiver errado, o worker nem inicia (o erro aparece na partida, não na primeira nota).
 Se a chamada falhar, a nota sai em `_inbox/` como `pendente`. Hoje **não há fallback automático** entre
-provedores; veja o item 2 de [Próximos passos](#próximos-passos).
+provedores; veja o item 1 de [Próximos passos](#próximos-passos).
+
+## Interface web
+
+```bash
+uv run kora-web        # ou, com o deploy/install.sh, já fica ligada: http://127.0.0.1:8765
+```
+
+Três abas. O vault continua sendo a fonte da verdade: a galeria só lê as notas e, quando você corrige uma
+categoria, move o arquivo como o bot já faz.
+
+- **Salvos:** busca ao digitar (`/` foca o campo; mesma busca do `/buscar`, sem acento), filtros por categoria,
+  plataforma, período e tag, e os links agrupados por dia. Clicar abre um painel com resumo, pontos-chave,
+  legenda, transcrição, o link original e a troca de categoria. Notas sem classificação ficam em "Sem categoria".
+  Cada categoria tem um sigilo próprio, desenhado em traço fino.
+- **Fila:** o que está em andamento, esperando o lote, falhou (com o erro) e aguarda IA, mais o botão
+  "Processar agora", que dispara um lote como o `/processar` do bot.
+- **Ajustes:** provedor de IA e modelo (com teste de conexão e, no Ollama, os modelos instalados), chaves de API,
+  intervalo dos lotes, modelo de transcrição, limites e categorias. Salvar reescreve o `.env` (preservando
+  comentários e a permissão do arquivo), grava `data/categorias.json`, grava o intervalo em
+  `~/.config/systemd/user/kora-worker.timer.d/intervalo.conf` e reinicia o bot. O worker roda em lote e lê tudo
+  no próximo.
+
+**Segurança.** Só escuta em `127.0.0.1`. Toda requisição confere o `Host` (contra DNS rebinding) e toda escrita
+exige JSON e `Origin` local, então uma página aberta no navegador não consegue acionar o painel. As chaves de API
+são só gravadas: a tela nunca as mostra (um campo em branco mantém a chave salva). Categorias renomeadas ou
+removidas não movem notas já salvas, e o nome vira pasta no vault (por isso `/ \ : * ? " < > |` são recusados).
 
 ## Rodando no dia a dia
 
@@ -250,8 +280,8 @@ loginctl enable-linger "$USER"             # opcional: sobe no boot, sem login
 deploy/install.sh uninstall                # remove tudo
 ```
 
-Para mudar o ritmo, edite `OnBootSec` e `OnUnitInactiveSec` em `~/.config/systemd/user/kora-worker.timer`
-(ou `systemctl --user edit kora-worker.timer`).
+Para mudar o ritmo, use a aba Ajustes da [interface web](#interface-web) ou edite `OnBootSec` e
+`OnUnitInactiveSec` com `systemctl --user edit kora-worker.timer`.
 
 Os logs de HTTP ficam silenciados de propósito: a URL da API do Telegram carrega o token do bot.
 
@@ -276,6 +306,7 @@ src/kora/
 ├── indice.py          # cria o Salvos.md
 ├── agenda.py          # registro das execuções e consulta ao timer do systemd
 ├── status.py          # texto do /status
+├── web/               # interface web: app.py (rotas), acervo.py (galeria), ajustes.py, templates/, static/
 └── config.py, logs.py, telegram_api.py
 deploy/                # units do systemd e scripts de instalação
 docs/PLANO.md          # plano, decisões e resultados da validação técnica
@@ -310,42 +341,29 @@ decisões e o histórico das fases estão em [docs/PLANO.md](docs/PLANO.md).
 
 ## Próximos passos
 
-Nada abaixo está implementado ainda.
+Nada abaixo está implementado ainda. A interface configurável e a galeria dos links salvos já saíram (veja [Interface web](#interface-web)).
 
-### 1. Interface configurável para a Kora
-Hoje tudo é configurado no `.env` e nos arquivos do `systemd`. Um painel permitiria trocar o provedor de IA e
-os modelos, testar a conexão, ajustar o idioma, o intervalo dos lotes e os limites, e editar a taxonomia, que
-hoje é fixa no código e passaria para um arquivo de configuração. Aplicaria as mudanças e reiniciaria os
-serviços. Pode ser a mesma aplicação web do item 5, em outra aba.
-*Decisões em aberto:* web local ou terminal (TUI); como proteger o painel e as chaves.
-
-### 2. Orquestrador de IA com fallback
+### 1. Orquestrador de IA com fallback
 Hoje cada provedor funciona sozinho e, se ele falhar, a nota fica pendente. O orquestrador tentaria vários em
 ordem configurável (por exemplo Anthropic, depois DeepSeek, depois Ollama), passando ao próximo quando houver
 erro, limite de uso ou JSON inválido, e registraria quem respondeu (o campo `ia` da nota já existe). A interface
 `Provider.complete()` já foi pensada para isso: o orquestrador entra por cima, sem mexer nos provedores.
 *Decisões em aberto:* ordem fixa ou por custo/latência; limite de gasto; rotear por tipo de conteúdo.
 
-### 3. Bot no WhatsApp
+### 2. Bot no WhatsApp
 Um segundo canal de entrada, com o mesmo fluxo e os mesmos comandos. Para isso, o que hoje está acoplado ao
 Telegram (`bot.py`, `telegram_api.py`) viraria uma interface de "canal" (receber link, responder, tratar
 comandos), com um adaptador por plataforma.
 *Decisões em aberto:* a API oficial (WhatsApp Business Cloud API) exige conta Meta, webhook público e modelos de
 mensagem; as bibliotecas não oficiais são mais simples, mas arriscam bloqueio do número.
 
-### 4. Tradução para o idioma escolhido
+### 3. Tradução para o idioma escolhido
 Conteúdo em outros idiomas seria traduzido para o idioma que você selecionar (`pt-BR` por padrão). Hoje o
 resumo e os pontos-chave já saem em português por instrução do prompt, mas o idioma é fixo e a transcrição, o
 artigo e a legenda ficam no original. A ideia: idioma-alvo configurável, detectar o idioma de origem (o Whisper
 já detecta o do áudio), traduzir título, resumo e pontos-chave e, opcionalmente, o conteúdo completo numa seção
 "Tradução", sempre guardando o original.
 *Decisões em aberto:* traduzir tudo ou só o resumo; qual provedor traduz (custo de textos longos).
-
-### 5. Interface para exibir os links salvos
-Uma galeria web local para navegar pelo que foi salvo sem abrir o Obsidian: filtros por categoria, tag,
-plataforma e data; busca; página de cada item com resumo, pontos-chave, transcrição e link para o original;
-corrigir categoria; ver pendentes e falhas. Leria as notas do vault, que continua sendo a fonte da verdade,
-reaproveitando `ler_nota` e a busca atuais.
 
 ### Menores, sem prazo
 - Cookies para o YouTube e outros sites que exigem login.
