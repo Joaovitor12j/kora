@@ -23,6 +23,7 @@
     <a href="#lotes">Lotes</a>
     <a href="#limites">Transcrição e limites</a>
     <a href="#categorias">Categorias</a>
+    <a href="#acesso">Acesso de fora</a>
   </nav>
 
   <form class="folha" id="form-ajustes" novalidate>
@@ -104,6 +105,15 @@
         {% endfor %}
       </ol>
       <button class="botao" type="button" id="nova-categoria">Adicionar categoria</button>
+    </section>
+
+    <section class="bloco" id="acesso">
+      <h2>Acesso de fora</h2>
+      <p class="mudo">Para abrir a Kora no celular ou em outro computador pela sua rede privada do Tailscale (veja o README).
+        Só entra quem usa um endereço da lista e um e-mail autorizado. Vale na hora, sem reiniciar.
+        {% if remoto %}Para mudar isto, abra a Kora pelo próprio computador.{% endif %}</p>
+      {{ campo("Endereços aceitos", "WEB_HOSTS", a.web_hosts, "Nome do host no Tailscale, como meu-pc.rede.ts.net. Vários, separados por vírgula.", "text", "readonly" if remoto else "") }}
+      {{ campo("E-mails autorizados", "WEB_ALLOWED_USERS", a.web_allowed_users, "O login da conta no Tailscale. Vazio bloqueia todo acesso de fora.", "text", "readonly" if remoto else "") }}
     </section>
 
     <div class="barra" id="barra" hidden>

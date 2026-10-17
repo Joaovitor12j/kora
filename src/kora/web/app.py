@@ -2,6 +2,7 @@
 
 Uso: uv run kora-web [--porta 8765]
 Escuta só em 127.0.0.1 e confere Host e Origin: página de outro site não consegue acionar o painel.
+De fora da máquina só entra pelo Tailscale Serve (veja "Acesso de fora" no README).
 """
 import argparse
 import asyncio
@@ -16,7 +17,7 @@ from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -34,10 +35,12 @@ from .sigilos import chave_do_sigilo
 
 log = logging.getLogger("kora.web")
 AQUI = Path(__file__).parent
-HOSTS = {"127.0.0.1", "localhost", "::1"}
 PORTA_PADRAO = 8765
 
-templates = Jinja2Templates(directory=AQUI / "templates")
+templates = Jinja2Templates(
+    directory=AQUI / "templates",
+    context_processors=[lambda req: {"remoto": getattr(req.state, "remoto", False),
+                                     "usuario": getattr(req.state, "usuario", "")}])
 templates.env.globals["sigilo_chave"] = chave_do_sigilo
 templates.env.filters["data_br"] = acervo.data_br
 
@@ -54,8 +57,36 @@ def fila():
 
 # --- segurança ----------------------------------------------------------------------------------
 
+LOCAIS = {"127.0.0.1", "localhost", "::1"}
+# Cabeçalho que o `tailscale serve` põe com o login de quem está na rede privada. Só vale porque o servidor
+# escuta em 127.0.0.1: o único caminho de fora até aqui é o próprio Tailscale, que sobrescreve esse cabeçalho.
+CABECALHO_USUARIO = "tailscale-user-login"
+
+
+def decidir_acesso(host: str, usuario: str, metodo: str, origem: str | None, tipo: str,
+                   hosts_extras: set[str], usuarios: set[str]) -> tuple[str | None, bool]:
+    """(motivo da recusa ou None, acesso remoto?). Função pura para ser testada sem subir servidor.
+
+    Local: basta o Host ser local. Remoto: o Host precisa estar em WEB_HOSTS e o login do Tailscale em
+    WEB_ALLOWED_USERS. Em toda escrita: JSON e Origin de um host aceito.
+    """
+    remoto = host not in LOCAIS
+    if remoto and host not in hosts_extras:
+        return "Host não permitido", remoto
+    if remoto and not usuarios:
+        return "Acesso remoto sem usuários autorizados: defina WEB_ALLOWED_USERS no .env", remoto
+    if remoto and usuario.lower() not in usuarios:
+        return "Usuário não autorizado", remoto
+    if metodo not in ("GET", "HEAD", "OPTIONS"):
+        if origem and urlsplit(origem).hostname not in LOCAIS | hosts_extras:
+            return "Origem não permitida", remoto
+        if not tipo.startswith("application/json"):
+            return "Envie JSON", remoto
+    return None, remoto
+
+
 class SoLocal:
-    """Rejeita Host de fora (DNS rebinding) e escritas sem JSON ou de outra origem (CSRF)."""
+    """Só aceita Host local, ou os de WEB_HOSTS vindos de um usuário autorizado; escrita só com JSON e Origin ok."""
 
     def __init__(self, app):
         self.app = app
@@ -63,18 +94,18 @@ class SoLocal:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             req = Request(scope)
-            erro = None
-            if urlsplit("//" + req.headers.get("host", "")).hostname not in HOSTS:
-                erro = "Host não permitido"
-            elif req.method not in ("GET", "HEAD", "OPTIONS"):
-                origem = req.headers.get("origin")
-                if origem and urlsplit(origem).hostname not in HOSTS:
-                    erro = "Origem não permitida"
-                elif not req.headers.get("content-type", "").startswith("application/json"):
-                    erro = "Envie JSON"
+            s = get_settings()
+            usuario = req.headers.get(CABECALHO_USUARIO, "")
+            erro, remoto = decidir_acesso(
+                (urlsplit("//" + req.headers.get("host", "")).hostname or "").lower(), usuario, req.method,
+                req.headers.get("origin"), req.headers.get("content-type", ""),
+                s.web_hosts_lista, s.web_users_lista)
             if erro:
-                await JSONResponse({"erro": erro}, status_code=403)(scope, receive, send)
+                resposta = JSONResponse({"erro": erro}, status_code=403) if req.url.path.startswith("/api/") \
+                    else PlainTextResponse(erro, status_code=403)
+                await resposta(scope, receive, send)
                 return
+            scope.setdefault("state", {}).update(remoto=remoto, usuario=usuario)
         await self.app(scope, receive, send)
 
 
@@ -187,6 +218,9 @@ async def api_salvar_ajustes(req: Request):
     corpo = await req.json()
     try:
         env = ajustes.validar(corpo.get("env") or {})
+        if req.state.remoto and ajustes.acesso_mudou(env, get_settings()):
+            return JSONResponse({"erro": "Quem pode entrar de fora só se muda a partir desta máquina"},
+                                status_code=403)
         categorias = ajustes.validar_categorias(corpo["categorias"]) if "categorias" in corpo else None
         lotes = ajustes.validar_intervalo(**corpo["lotes"]) if corpo.get("lotes") else None
     except (ajustes.ErroDeAjuste, TypeError, KeyError) as e:

@@ -249,6 +249,36 @@ exige JSON e `Origin` local, então uma página aberta no navegador não consegu
 são só gravadas: a tela nunca as mostra (um campo em branco mantém a chave salva). Categorias renomeadas ou
 removidas não movem notas já salvas, e o nome vira pasta no vault (por isso `/ \ : * ? " < > |` são recusados).
 
+### Acesso de fora (Tailscale)
+
+Para abrir a Kora no celular ou em outro computador, sem expor nada na internet: o servidor continua escutando só
+em `127.0.0.1` e o [Tailscale](https://tailscale.com) (rede privada entre os seus dispositivos) publica a porta com
+HTTPS. O computador da Kora precisa estar ligado.
+
+1. Instale o Tailscale no computador da Kora e no celular, com a mesma conta, e rode no computador:
+
+   ```bash
+   sudo tailscale up
+   tailscale serve --bg 8765
+   ```
+
+   O comando mostra o endereço, algo como `https://meu-pc.rede.ts.net`.
+2. Diga à Kora quem pode entrar, em Ajustes, na seção "Acesso de fora" (ou no `.env`):
+
+   ```
+   WEB_HOSTS=meu-pc.rede.ts.net
+   WEB_ALLOWED_USERS=voce@exemplo.com
+   ```
+
+   Vale na hora, sem reiniciar. Quem muda essa lista só pode ser quem abre a Kora no próprio computador.
+3. Abra o endereço no celular, com o Tailscale ligado.
+
+**Como protege.** O `tailscale serve` põe o login de quem está na sua rede no cabeçalho `Tailscale-User-Login`, e a
+Kora só deixa entrar quem está em `WEB_ALLOWED_USERS` e usa um host de `WEB_HOSTS`. Isso só é confiável porque a
+porta local não é alcançável por mais ninguém: nunca use `tailscale funnel` (que torna a porta pública) nem
+mude o servidor para escutar fora de `127.0.0.1`. Sem `WEB_ALLOWED_USERS`, todo acesso de fora é recusado. Quem
+entra de fora vê um aviso no topo e não consegue mudar a lista de quem pode entrar.
+
 ## Rodando no dia a dia
 
 **À mão** (dois terminais):

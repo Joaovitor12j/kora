@@ -14,6 +14,9 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
   - **Fila:** em andamento, aguardando, falhas e notas sem IA, com "Processar agora".
   - **Ajustes:** provedor e modelo de IA com teste de conexão, chaves de API (só gravação), intervalo dos lotes,
     transcrição, limites e categorias. Salvar reescreve o `.env`, o drop-in do timer e reinicia o bot.
+- **Acesso de fora pelo Tailscale** (`WEB_HOSTS` e `WEB_ALLOWED_USERS`): a interface web aceita hosts da lista, só
+  de usuários autorizados (login do `tailscale serve`). Aviso no topo para quem entra de fora; a lista de quem pode
+  entrar só se muda no computador da Kora. Configurável na seção "Acesso de fora" dos Ajustes.
 - Categorias configuráveis: passam a ser lidas de `data/categorias.json` (as de fábrica continuam como padrão).
 
 ## [0.1.0] - 2026-10-17

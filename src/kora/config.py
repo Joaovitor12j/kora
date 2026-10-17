@@ -29,6 +29,18 @@ class Settings(BaseSettings):
     whisper_model: str = "small"
     whisper_language: str = ""  # vazio = detectar o idioma
     max_audio_minutes: int = 30
+    # Interface web fora desta máquina (Tailscale Serve): hosts aceitos além do local e e-mails
+    # autorizados a entrar por eles. Vazio = só acesso local.
+    web_hosts: str = ""
+    web_allowed_users: str = ""
+
+    @property
+    def web_hosts_lista(self) -> set[str]:
+        return {h.strip().lower() for h in self.web_hosts.split(",") if h.strip()}
+
+    @property
+    def web_users_lista(self) -> set[str]:
+        return {u.strip().lower() for u in self.web_allowed_users.split(",") if u.strip()}
 
     @property
     def heartbeat_path(self) -> Path:

@@ -12,6 +12,7 @@
 </head>
 <body>
 <a class="pular" href="#principal">Ir para o conteúdo</a>
+{% if remoto %}<p class="aviso-remoto" role="note">Acesso de fora{% if usuario %} como {{ usuario }}{% endif %}. O que você muda aqui vale no computador da Kora.</p>{% endif %}
 <header class="topo">
   <a class="marca" href="/" aria-label="Kora, início">
     <img class="avatar" src="/static/kora-avatar.webp" width="36" height="36" alt="">

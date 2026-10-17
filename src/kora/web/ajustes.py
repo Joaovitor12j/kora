@@ -19,8 +19,9 @@ WHISPER_MODELOS = ("tiny", "base", "small", "medium", "large-v3")
 # Chaves de API: o painel grava mas nunca devolve o valor.
 SEGREDOS = {"ANTHROPIC_API_KEY", "DEEPSEEK_API_KEY"}
 TEXTOS = {"ANTHROPIC_MODEL", "DEEPSEEK_MODEL", "OLLAMA_MODEL", "OLLAMA_BASE_URL", "WHISPER_LANGUAGE"}
+ACESSO = {"WEB_HOSTS", "WEB_ALLOWED_USERS"}
 INTEIROS = {"MAX_AUDIO_MINUTES": (1, 600), "LLM_MAX_CHARS": (1000, 100000), "LLM_TIMEOUT": (5, 600)}
-CAMPOS = SEGREDOS | TEXTOS | INTEIROS.keys() | {"LLM_PROVIDER", "WHISPER_MODEL"}
+CAMPOS = SEGREDOS | TEXTOS | ACESSO | INTEIROS.keys() | {"LLM_PROVIDER", "WHISPER_MODEL"}
 
 
 class ErroDeAjuste(ValueError):
@@ -79,12 +80,27 @@ def validar(entrada: dict) -> dict[str, str]:
             raise ErroDeAjuste(f"Modelo de transcrição inválido: {valor}")
         if chave == "OLLAMA_BASE_URL" and not re.match(r"^https?://\S+$", valor):
             raise ErroDeAjuste("O endereço do Ollama deve começar com http:// ou https://")
+        itens = [i.strip() for i in valor.split(",") if i.strip()]
+        if chave == "WEB_HOSTS" and not all(re.fullmatch(r"[a-z0-9]([a-z0-9.-]*[a-z0-9])?", i.lower()) for i in itens):
+            raise ErroDeAjuste("WEB_HOSTS aceita só nomes de host separados por vírgula, sem http:// nem porta")
+        if chave == "WEB_ALLOWED_USERS" and not all(re.fullmatch(r"[^@\s,]+@[^@\s,]+", i) for i in itens):
+            raise ErroDeAjuste("WEB_ALLOWED_USERS aceita só e-mails separados por vírgula")
+        if chave in ACESSO:
+            valor = ",".join(itens)
         if chave in INTEIROS:
             menor, maior = INTEIROS[chave]
             if not valor.isdigit() or not menor <= int(valor) <= maior:
                 raise ErroDeAjuste(f"{chave} deve ser um número de {menor} a {maior}")
         limpo[chave] = valor
     return limpo
+
+
+def acesso_mudou(env_validado: dict[str, str], settings: Settings) -> bool:
+    """True se o envio altera quem pode entrar de fora. Valores iguais aos atuais não contam."""
+    atual = {"WEB_HOSTS": ",".join(sorted(settings.web_hosts_lista)),
+             "WEB_ALLOWED_USERS": ",".join(sorted(settings.web_users_lista))}
+    return any(",".join(sorted(i.lower() for i in env_validado[k].split(",") if i)) != atual[k]
+               for k in ACESSO if k in env_validado)
 
 
 def estado(settings: Settings) -> dict:
@@ -98,6 +114,8 @@ def estado(settings: Settings) -> dict:
         "ollama_model": settings.ollama_model,
         "ollama_base_url": settings.ollama_base_url,
         "chaves": {k: bool(env.get(k)) for k in sorted(SEGREDOS)},
+        "web_hosts": settings.web_hosts,
+        "web_allowed_users": settings.web_allowed_users,
         "whisper_model": settings.whisper_model,
         "whisper_modelos": list(WHISPER_MODELOS),
         "whisper_language": settings.whisper_language,

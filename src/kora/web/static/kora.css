@@ -54,6 +54,9 @@ code { font: .88em ui-monospace, "SF Mono", Menlo, monospace; padding: .1em .4em
 .pular:focus { left: 16px; top: 12px; z-index: 50; background: var(--camada); padding: 8px 12px; border-radius: 8px; }
 .mudo { color: var(--mudo); }
 
+/* Aviso de acesso de fora */
+.aviso-remoto { margin: 0; padding: 8px var(--gutter); font-size: 14px; color: #ffd6f0; background: rgba(240, 70, 180, .14); border-bottom: 1px solid rgba(240, 70, 180, .35); }
+
 /* Topo */
 .topo {
   position: sticky; top: 0; z-index: 20;

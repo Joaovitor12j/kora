@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import stat
 from datetime import date
 
@@ -234,3 +235,92 @@ def test_paginas_de_fila_e_ajustes_abrem(s, c):
 def test_testar_conexao_sem_provedor(s, c):
     r = c.post("/api/ajustes/testar", json={"provedor": "", "env": {}})
     assert r.json()["ok"] is False
+
+
+# --- acesso de fora (Tailscale) -----------------------------------------------------------------
+
+from kora.web.app import CABECALHO_USUARIO, decidir_acesso  # noqa: E402
+
+HOST = "kora.rede.ts.net"
+EU = "eu@exemplo.com"
+
+
+def decide(host="localhost", usuario="", metodo="GET", origem=None, tipo="", hosts=frozenset(), usuarios=frozenset()):
+    return decidir_acesso(host, usuario, metodo, origem, tipo, set(hosts), set(usuarios))
+
+
+def test_local_dispensa_login_e_remoto_exige():
+    assert decide("127.0.0.1") == (None, False)
+    assert decide("::1") == (None, False)
+    assert decide(HOST, EU, hosts={HOST}, usuarios={EU}) == (None, True)
+    assert decide(HOST, EU, hosts=set(), usuarios={EU})[0] == "Host não permitido"
+    assert decide(HOST, "", hosts={HOST}, usuarios={EU})[0] == "Usuário não autorizado"
+    assert decide(HOST, "outro@x.com", hosts={HOST}, usuarios={EU})[0] == "Usuário não autorizado"
+    assert "WEB_ALLOWED_USERS" in decide(HOST, EU, hosts={HOST})[0]
+
+
+def test_login_ignora_maiusculas_e_escrita_remota_confere_origem():
+    assert decide(HOST, "Eu@Exemplo.com", hosts={HOST}, usuarios={EU})[0] is None
+    ok = dict(host=HOST, usuario=EU, metodo="POST", tipo="application/json", hosts={HOST}, usuarios={EU})
+    assert decide(**ok, origem=f"https://{HOST}")[0] is None
+    assert decide(**ok, origem="https://evil.example")[0] == "Origem não permitida"
+    assert decide(**{**ok, "tipo": "text/plain"})[0] == "Envie JSON"
+
+
+@pytest.fixture
+def remoto(s, monkeypatch):
+    monkeypatch.setenv("WEB_HOSTS", HOST)
+    monkeypatch.setenv("WEB_ALLOWED_USERS", EU)
+    get_settings.cache_clear()
+    return TestClient(app, base_url=f"https://{HOST}", headers={CABECALHO_USUARIO: EU})
+
+
+def test_pagina_remota_com_login_certo_mostra_aviso(remoto):
+    r = remoto.get("/")
+    assert r.status_code == 200 and f"Acesso de fora como {EU}" in r.text
+
+
+def test_remoto_sem_login_ou_com_login_errado_e_barrado(remoto):
+    assert remoto.get("/", headers={CABECALHO_USUARIO: ""}).status_code == 403
+    assert remoto.get("/", headers={CABECALHO_USUARIO: "outro@x.com"}).status_code == 403
+    r = remoto.get("/api/ollama/modelos", headers={CABECALHO_USUARIO: "outro@x.com"})
+    assert r.status_code == 403 and r.json()["erro"] == "Usuário não autorizado"
+
+
+def test_local_continua_sem_aviso_mesmo_com_acesso_de_fora_ligado(remoto, s):
+    local = TestClient(app, base_url="http://127.0.0.1:8765")
+    r = local.get("/")
+    assert r.status_code == 200 and "Acesso de fora" not in r.text
+
+
+def test_remoto_nao_muda_quem_entra_mas_salva_o_resto(remoto, tmp_path):
+    (tmp_path / ".env").write_text(f"WEB_HOSTS={HOST}\nWEB_ALLOWED_USERS={EU}\n", encoding="utf-8")
+    ruim = remoto.put("/api/ajustes", json={"env": {"WEB_ALLOWED_USERS": f"{EU},intruso@x.com"}})
+    assert ruim.status_code == 403
+    ok = remoto.put("/api/ajustes", json={"env": {"WEB_HOSTS": HOST.upper(), "WEB_ALLOWED_USERS": EU,
+                                                  "MAX_AUDIO_MINUTES": "20"}})
+    assert ok.status_code == 200, ok.text
+    assert ajustes.ler_env()["MAX_AUDIO_MINUTES"] == "20"
+
+
+def test_local_muda_quem_entra_e_vale_na_hora(s, c, tmp_path):
+    (tmp_path / ".env").write_text("", encoding="utf-8")
+    assert TestClient(app, base_url=f"https://{HOST}").get("/").status_code == 403
+    assert c.put("/api/ajustes", json={"env": {"WEB_HOSTS": HOST, "WEB_ALLOWED_USERS": EU}}).status_code == 200
+    r = TestClient(app, base_url=f"https://{HOST}").get("/", headers={CABECALHO_USUARIO: EU})
+    assert r.status_code == 200
+
+
+def test_validar_acesso_de_fora():
+    assert ajustes.validar({"WEB_HOSTS": " A.ts.net , b.ts.net ", "WEB_ALLOWED_USERS": "a@x.com, b@y.com"}) == \
+        {"WEB_HOSTS": "A.ts.net,b.ts.net", "WEB_ALLOWED_USERS": "a@x.com,b@y.com"}
+    for ruim in ({"WEB_HOSTS": "https://a.ts.net"}, {"WEB_HOSTS": "a.ts.net:8765"}, {"WEB_HOSTS": "a b"},
+                 {"WEB_ALLOWED_USERS": "sem-arroba"}, {"WEB_ALLOWED_USERS": "a@x.com;b@y.com"}):
+        with pytest.raises(ajustes.ErroDeAjuste):
+            ajustes.validar(ruim)
+
+
+def test_tela_de_ajustes_remota_trava_o_acesso(remoto):
+    html = remoto.get("/ajustes").text
+    assert "abra a Kora pelo próprio computador" in html
+    assert re.search(r'name="WEB_HOSTS"[^>]*readonly', html) and re.search(r'name="WEB_ALLOWED_USERS"[^>]*readonly', html)
