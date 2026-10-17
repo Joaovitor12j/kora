@@ -16,3 +16,6 @@ tmp/
 spike/.venv/
 spike/out/
 spike/links.txt
+
+# Imagens originais, grandes demais para o repositório (a versão leve fica em docs/img/)
+docs/img/original/

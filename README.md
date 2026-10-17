@@ -1,6 +1,8 @@
-# Kora
+<p align="center"><img src="docs/img/kora.png" width="200" alt="Kora: androide cyberpunk com visor ciano e um marcador de livro luminoso na testa"></p>
 
-> *Kora* = "salvar" em Akan.
+<h1 align="center">Kora</h1>
+
+<p align="center"><em>Kora</em> = "salvar" em Akan.</p>
 
 Kora é um bot do Telegram que transforma links soltos em notas organizadas no seu vault do Obsidian.
 Você manda o link de um Reel, TikTok, tweet, vídeo ou artigo; a Kora baixa o que for preciso, transcreve o
