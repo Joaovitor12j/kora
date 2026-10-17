@@ -4,12 +4,13 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
+from .agenda import iniciar_lote
 from .busca import buscar, formatar
 from .config import get_settings
 from .logs import configurar
 from .status import texto_status
 from .correcao import corrigir_categoria, pedido_de_categoria
-from .db import CONCLUIDO, FALHOU, Queue
+from .db import CONCLUIDO, FALHOU, NA_FILA, Queue
 from .urls import canonicalize, extract_urls, needs_resolution, platform_of, resolve_redirects
 
 log = logging.getLogger("kora.bot")
@@ -66,6 +67,19 @@ async def on_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(texto, disable_web_page_preview=True)
 
 
+async def on_processar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    na_fila = context.application.bot_data["queue"].counts().get(NA_FILA, 0)
+    if not na_fila:
+        await update.effective_message.reply_text("A fila está vazia, nada a processar.")
+        return
+    resultado = await asyncio.to_thread(iniciar_lote)
+    await update.effective_message.reply_text({
+        "iniciado": f"Lote iniciado: {na_fila} na fila. Aviso cada link quando ficar pronto.",
+        "andamento": "Já tem um lote rodando; os links novos entram nele ou no próximo.",
+        "indisponivel": "Não consegui iniciar o lote: o serviço kora-worker não está instalado (deploy/install.sh).",
+    }[resultado])
+
+
 async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Sem isto, uma falha num comando só aparece no log e o usuário vê o bot mudo."""
     log.error("erro ao tratar a mensagem", exc_info=context.error)
@@ -82,6 +96,7 @@ def main() -> None:
     only_me = filters.Chat(chat_id=settings.telegram_allowed_chat_id)
     app.add_handler(CommandHandler("buscar", on_buscar, filters=only_me))
     app.add_handler(CommandHandler("status", on_status, filters=only_me))
+    app.add_handler(CommandHandler("processar", on_processar, filters=only_me))
     app.add_handler(MessageHandler(only_me & filters.TEXT & ~filters.COMMAND, on_message))
     app.add_error_handler(on_error)
     log.info("bot iniciado (long polling)")

@@ -10,7 +10,7 @@ import pytest
 from kora import logs, status, worker
 from kora.config import Settings
 from kora.db import Queue
-from kora.status import estado_ia, estado_worker, idade, montar_status
+from kora.status import estado_ia, idade, linhas_worker, montar_status, plural
 
 RAIZ = Path(__file__).resolve().parent.parent
 
@@ -33,13 +33,17 @@ def test_idade(seg, texto):
     assert idade(seg) == texto
 
 
-def test_estado_worker(s):
-    assert "nunca iniciou" in estado_worker(s, 1000.0)
+def test_plural():
+    assert plural(1, "falha", "falhas") == "1 falha" and plural(0, "falha", "falhas") == "0 falhas"
+
+
+def test_linhas_worker_continuous_heartbeat(s):
+    assert linhas_worker(s, 1000.0)[0] == "• Última execução: nenhuma registrada"
     s.heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
     s.heartbeat_path.touch()
     os.utime(s.heartbeat_path, (1000.0, 1000.0))
-    assert estado_worker(s, 1004.0) == "ativo (batimento há 4 s)"
-    assert estado_worker(s, 1000.0 + 3 * 3600) == "PARADO (último batimento há 3 h)"
+    assert linhas_worker(s, 1004.0) == ["• Modo: contínuo, ativo (batimento há 4 s)"]
+    assert "contínuo" not in " ".join(linhas_worker(s, 1000.0 + 3 * 3600))  # batimento velho: volta ao modo em lotes
 
 
 def test_estado_ia(s):
@@ -56,16 +60,16 @@ def test_montar_status(s, q):
         q.claim_next(now=10**9); q.fail(ruim.id, "yt-dlp: ERROR: bloqueado", now=950.0)
     q.enqueue("u3", "https://x.com/c/3", "x")
     texto = montar_status(q, s, agora=1000.0)
-    assert "worker: nunca iniciou" in texto
-    assert "fila: 1 aguardando · 0 processando · 1 salvos · 1 falharam" in texto
-    assert "IA: desligada" in texto and "yt-dlp: 20" in texto
-    assert "último salvo: há 2 min — Salvo bem" in texto
-    assert "falhas recentes:\n- https://x.com/b/2\n  yt-dlp: ERROR: bloqueado" in texto
+    assert texto.startswith("Kora — status\n\nLotes\n• Última execução: nenhuma registrada\n")
+    assert "\n\nFila\n• Aguardando: 1\n• Processando: 0\n• Salvos: 1\n• Falharam: 1\n• Notas pendentes de IA: 0\n" in texto
+    assert "\n\nSistema\n• IA: desligada\n• yt-dlp: 20" in texto
+    assert "\n\nÚltimo salvo\nSalvo bem (há 2 min)" in texto
+    assert texto.endswith("\n\nFalhas recentes\n• https://x.com/b/2\n  yt-dlp: ERROR: bloqueado")
 
 
 def test_status_without_data(s, q):
     texto = montar_status(q, s, agora=1.0)
-    assert "último salvo" not in texto and "falhas recentes" not in texto
+    assert "Último salvo" not in texto and "Falhas recentes" not in texto
 
 
 def test_falhas_recentes_order_and_limit(q):
@@ -113,12 +117,26 @@ def test_service_units_run_real_entrypoints_and_use_placeholder():
     scripts = tomllib.loads((RAIZ / "pyproject.toml").read_text())["project"]["scripts"]
     for unit in ("kora-bot.service", "kora-worker.service"):
         texto = (RAIZ / "deploy" / unit).read_text()
-        exec_start = re.search(r"^ExecStart=@REPO@/\.venv/bin/(\S+)$", texto, re.M)
+        exec_start = re.search(r"^ExecStart=@REPO@/\.venv/bin/(\S+)", texto, re.M)
         assert exec_start and exec_start.group(1) in scripts, unit
-        assert "WorkingDirectory=@REPO@" in texto and "Restart=on-failure" in texto
+        assert "WorkingDirectory=@REPO@" in texto
+    assert "Restart=on-failure" in (RAIZ / "deploy" / "kora-bot.service").read_text()
     timer = (RAIZ / "deploy" / "kora-ytdlp-update.timer").read_text()
     assert "Persistent=true" in timer and "OnCalendar=daily" in timer
     assert "update-ytdlp.sh" in (RAIZ / "deploy" / "kora-ytdlp-update.service").read_text()
+
+
+def test_worker_runs_in_batches_driven_by_timer():
+    servico = (RAIZ / "deploy" / "kora-worker.service").read_text()
+    assert "Type=oneshot" in servico and "kora-worker --once" in servico and "[Install]" not in servico
+    timer = (RAIZ / "deploy" / "kora-worker.timer").read_text()
+    assert "OnBootSec=1h" in timer and "OnUnitInactiveSec=8h" in timer and "WantedBy=timers.target" in timer
+
+
+def test_install_script_enables_timer_not_oneshot_service():
+    texto = (RAIZ / "deploy" / "install.sh").read_text()
+    unidades = re.search(r"UNITS=\((.*?)\)", texto).group(1).split()
+    assert "kora-worker.timer" in unidades and "kora-worker.service" not in unidades
 
 
 @pytest.mark.parametrize("script", ["install.sh", "update-ytdlp.sh"])

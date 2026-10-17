@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atualiza o yt-dlp no venv do projeto e reinicia o worker se a versão mudou.
+# Atualiza o yt-dlp no venv do projeto. O worker roda em lotes, então o próximo lote já usa a versão nova.
 # Não mexe no uv.lock: um `uv sync` volta à versão travada. Para fixar a nova, use
 # `uv lock --upgrade-package yt-dlp`.
 # Com KORA_YTDLP_NIGHTLY=1 (ex.: `systemctl --user edit kora-ytdlp-update`) segue as versões
@@ -15,6 +15,4 @@ if [ "$antes" = "$depois" ]; then
     echo "yt-dlp já está na versão mais recente ($depois)"
     exit 0
 fi
-echo "yt-dlp atualizado: $antes -> $depois"
-# Item em andamento volta para a fila na partida (requeue_stuck).
-systemctl --user try-restart kora-worker.service
+echo "yt-dlp atualizado: $antes -> $depois (vale a partir do próximo lote)"

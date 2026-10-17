@@ -2,6 +2,7 @@ import time
 
 import yt_dlp.version
 
+from .agenda import Agenda, consultar, ler_execucao
 from .config import Settings
 from .db import CONCLUIDO, FALHOU, NA_FILA, PROCESSANDO, Queue
 from .llm import build_provider
@@ -21,15 +22,36 @@ def idade(segundos: float) -> str:
     return f"{round(segundos / 86400)} d"
 
 
-def estado_worker(settings: Settings, agora: float) -> str:
+def plural(n: int, singular: str, plural_: str) -> str:
+    return f"{n} {singular if n == 1 else plural_}"
+
+
+def linhas_worker(settings: Settings, agora: float, agenda: Agenda | None = None) -> list[str]:
+    """Worker contínuo (batimento) ou em lotes (última e próxima execução)."""
+    agenda = agenda or Agenda()
     try:
-        ultimo = settings.heartbeat_path.stat().st_mtime
+        delta = agora - settings.heartbeat_path.stat().st_mtime
     except OSError:
-        return "nunca iniciou (ou sem batimento ainda)"
-    delta = agora - ultimo
-    if delta <= BATIMENTO_VIVO:
-        return f"ativo (batimento há {idade(delta)})"
-    return f"PARADO (último batimento há {idade(delta)})"
+        delta = None
+    if delta is not None and delta <= BATIMENTO_VIVO:
+        return [f"• Modo: contínuo, ativo (batimento há {idade(delta)})"]
+
+    ultima = ler_execucao(settings.execucao_path)
+    if ultima:
+        resultado = f"{plural(ultima['salvos'], 'salvo', 'salvos')}, {plural(ultima['falhas'], 'falha', 'falhas')}"
+        linha_ultima = f"• Última execução: há {idade(agora - ultima['fim'])} ({resultado})"
+    else:
+        linha_ultima = "• Última execução: nenhuma registrada"
+
+    if agenda.rodando:
+        return ["• Lote rodando agora", linha_ultima]
+    if not agenda.instalada:
+        return [linha_ultima, "• Agendamento: não instalado (deploy/install.sh)"]
+    if agenda.proxima is None:
+        return [linha_ultima, "• Próxima: indisponível"]
+    if agenda.proxima > agora:
+        return [linha_ultima, f"• Próxima: em {idade(agenda.proxima - agora)}"]
+    return [linha_ultima, "• Próxima: vencida, aguardando disparo"]
 
 
 def estado_ia(settings: Settings) -> str:
@@ -40,25 +62,35 @@ def estado_ia(settings: Settings) -> str:
     return provider.label if provider else "desligada"
 
 
-def montar_status(queue: Queue, settings: Settings, agora: float | None = None) -> str:
+def montar_status(queue: Queue, settings: Settings, agora: float | None = None,
+                  agenda: Agenda | None = None) -> str:
     agora = time.time() if agora is None else agora
     c = queue.counts()
     linhas = [
         "Kora — status",
-        f"worker: {estado_worker(settings, agora)}",
-        f"fila: {c.get(NA_FILA, 0)} aguardando · {c.get(PROCESSANDO, 0)} processando · "
-        f"{c.get(CONCLUIDO, 0)} salvos · {c.get(FALHOU, 0)} falharam",
-        f"notas pendentes de IA: {len(pendentes(settings))}",
-        f"IA: {estado_ia(settings)}",
-        f"yt-dlp: {yt_dlp.version.__version__}",
+        "",
+        "Lotes",
+        *linhas_worker(settings, agora, agenda),
+        "",
+        "Fila",
+        f"• Aguardando: {c.get(NA_FILA, 0)}",
+        f"• Processando: {c.get(PROCESSANDO, 0)}",
+        f"• Salvos: {c.get(CONCLUIDO, 0)}",
+        f"• Falharam: {c.get(FALHOU, 0)}",
+        f"• Notas pendentes de IA: {len(pendentes(settings))}",
+        "",
+        "Sistema",
+        f"• IA: {estado_ia(settings)}",
+        f"• yt-dlp: {yt_dlp.version.__version__}",
     ]
     if ultimo := queue.ultimo_concluido():
         item, quando = ultimo
-        linhas.append(f"último salvo: há {idade(agora - quando)} — {item.titulo or item.url_canonica}")
+        linhas += ["", "Último salvo", f"{item.titulo or item.url_canonica} (há {idade(agora - quando)})"]
     falhas = queue.falhas_recentes(5)
     if falhas:
-        linhas.append("falhas recentes:")
-        linhas += [f"- {f.url_canonica}\n  {(f.erro or 'sem detalhe')[:160]}" for f in falhas]
+        linhas += ["", "Falhas recentes"]
+        for f in falhas:
+            linhas += [f"• {f.url_canonica}", f"  {(f.erro or 'sem detalhe')[:160]}"]
     return "\n".join(linhas)
 
 
@@ -66,6 +98,6 @@ def texto_status(settings: Settings) -> str:
     """Abre a própria conexão: o SQLite não deixa uma conexão cruzar threads (o bot roda isto em to_thread)."""
     queue = Queue(settings.db_path)
     try:
-        return montar_status(queue, settings)
+        return montar_status(queue, settings, agenda=consultar())
     finally:
         queue.close()

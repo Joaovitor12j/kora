@@ -49,25 +49,39 @@ Plano completo e fases: [docs/PLANO.md](docs/PLANO.md).
 
 ## Como serviço (systemd --user)
 
+O **bot fica sempre ligado** (recebe os links na hora, responde `/buscar`, `/status` e correções). O **worker
+roda em lotes**: um timer dispara um lote 1 h depois de ligar o computador e, depois, 8 h após o fim de cada
+lote (`deploy/kora-worker.timer`; só conta o tempo com a máquina ligada). Cada lote esvazia a fila e termina.
+O aviso "salvo em …" de cada link chega quando o lote o processa, então pode demorar até 8 h.
+
 Pare o bot e o worker que estiverem em terminais (dois bots com o mesmo token disputam as mensagens) e rode:
 
 ```bash
 deploy/install.sh
 ```
 
-Isso instala e inicia `kora-bot`, `kora-worker` e um timer diário que atualiza o `yt-dlp` (reinicia o worker
-se a versão mudou; `KORA_YTDLP_NIGHTLY=1` segue as versões nightly). Reinício automático em falha.
+Isso instala o bot, o timer dos lotes e o timer diário que atualiza o `yt-dlp`. Reinício automático do bot em
+falha. Quem já tinha o worker contínuo instalado é migrado sozinho.
 
 ```bash
-systemctl --user status kora-bot kora-worker   # estado
-journalctl --user -u kora-worker -f            # logs
+systemctl --user list-timers 'kora-*'          # próximas execuções
+journalctl --user -u kora-worker -f            # logs dos lotes
+journalctl --user -u kora-bot -f               # logs do bot
 deploy/install.sh uninstall                    # remove
 loginctl enable-linger "$USER"                 # opcional: sobe no boot, sem login
 ```
 
-No Telegram, `/status` mostra se o worker está vivo, a fila, notas pendentes de IA, o provedor de IA, a
-versão do `yt-dlp`, o último salvo e as falhas recentes. O nível de log vem de `LOG_LEVEL` (padrão `INFO`);
-os logs de HTTP ficam silenciados porque a URL da API do Telegram carrega o token do bot.
+Para mudar o ritmo, edite `OnBootSec` e `OnUnitInactiveSec` em `~/.config/systemd/user/kora-worker.timer`
+(ou `systemctl --user edit kora-worker.timer`).
 
-Limite conhecido: o Telegram guarda mensagens não lidas por 24 h. Com a máquina desligada por mais tempo,
-links enviados nesse intervalo se perdem.
+No Telegram:
+- `/processar` dispara um lote agora, sem esperar o timer.
+- `/status` mostra a última execução (quando, quantos salvos e falhas), a próxima, a fila, notas pendentes de
+  IA, o provedor de IA, a versão do `yt-dlp`, o último salvo e as falhas recentes.
+
+`uv run kora-worker --once` roda um lote à mão; sem `--once` o worker fica em loop (modo contínuo, útil em
+desenvolvimento). O nível de log vem de `LOG_LEVEL` (padrão `INFO`); os logs de HTTP ficam silenciados porque a
+URL da API do Telegram carrega o token do bot.
+
+Limite conhecido: o Telegram guarda mensagens não lidas por 24 h. Se o bot ficar parado por mais tempo, links
+enviados nesse intervalo se perdem. A fila local não tem esse limite: o bot a alimenta na hora.

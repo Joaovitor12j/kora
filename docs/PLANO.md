@@ -143,6 +143,8 @@ Busca atual: varredura simples dos arquivos (todos os termos, sem acento, com pe
 - [x] Atualizar `yt-dlp` automaticamente (quebra com frequência quando os sites mudam).
 - [x] Log simples e comando `/status` no bot (fila pendente, últimas falhas).
 
+Depois: worker em lotes (`kora-worker --once`) disparado por timer (1 h após o boot, depois 8 h após cada lote), bot sempre ligado, `/processar` e `/status` com última e próxima execução.
+
 Implementação: `deploy/` (units, `install.sh`, `update-ytdlp.sh`), `status.py`, `logs.py` e batimento do worker. Retentativa já vinha da Fase 1 (3 tentativas, backoff de 1 e 2 min).
 
 ## Riscos / dúvidas

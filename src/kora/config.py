@@ -35,6 +35,10 @@ class Settings(BaseSettings):
         return self.db_path.parent / "worker.heartbeat"
 
     @property
+    def execucao_path(self) -> Path:
+        return self.db_path.parent / "ultima_execucao.json"
+
+    @property
     def saved_dir(self) -> Path:
         return self.vault_path / self.vault_saved_dir
 

@@ -171,6 +171,13 @@ class Queue:
         row = self._conn.execute("SELECT * FROM itens WHERE url_canonica = ?", (url_canonica,)).fetchone()
         return self._item(row) if row else None
 
+    def proxima_tentativa(self, now: float | None = None) -> float | None:
+        """Quando o item em espera de retentativa mais próximo fica elegível (None se não há)."""
+        now = time.time() if now is None else now
+        row = self._conn.execute("SELECT MIN(proxima_em) FROM itens WHERE status = ? AND proxima_em > ?",
+                                 (NA_FILA, now)).fetchone()
+        return row[0]
+
     def falhas_recentes(self, limite: int = 5) -> list[Item]:
         rows = self._conn.execute("SELECT * FROM itens WHERE status = ? ORDER BY atualizado_em DESC LIMIT ?",
                                   (FALHOU, limite)).fetchall()

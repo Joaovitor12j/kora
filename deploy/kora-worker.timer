@@ -1,0 +1,11 @@
+[Unit]
+Description=Kora — processa a fila de links em lotes
+
+[Timer]
+# Primeiro lote 1 h depois de ligar; depois, 8 h após o fim de cada lote.
+# Os dois contam só o tempo com a máquina ligada (relógio monotônico).
+OnBootSec=1h
+OnUnitInactiveSec=8h
+
+[Install]
+WantedBy=timers.target

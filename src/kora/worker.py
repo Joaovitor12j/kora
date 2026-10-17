@@ -1,10 +1,12 @@
+import argparse
 import logging
 import re
 import threading
 import time
 
 from .config import Settings, get_settings
-from .db import FALHOU, Item, Queue
+from .db import CONCLUIDO, FALHOU, Item, Queue
+from .agenda import registrar_execucao
 from .classificar import classificar
 from .extractors.meta import Meta, fetch_meta
 from .indice import garantir_indice
@@ -16,6 +18,7 @@ from .vault import destino, tags_existentes, write_note
 
 log = logging.getLogger("kora.worker")
 IDLE_SLEEP = 2.0
+ESPERA_RETENTATIVA_MAX = 300.0  # no lote, espera o backoff de itens que falharam se for curto
 
 
 def process(queue: Queue, settings: Settings, item: Item, provider: Provider | None = None) -> Meta:
@@ -82,7 +85,34 @@ def batimento(path, intervalo: float = 10.0) -> None:
         time.sleep(intervalo)
 
 
+def executar_lote(queue: Queue, settings: Settings, provider: Provider | None,
+                  dormir=time.sleep, agora=time.time) -> dict:
+    """Esvazia a fila e retorna. Itens que falharam e voltam em poucos minutos (backoff) são esperados."""
+    inicio, antes = agora(), queue.counts()
+    tentativas = 0
+    while True:
+        if run_once(queue, settings, provider):
+            tentativas += 1
+            continue
+        proxima = queue.proxima_tentativa(agora())
+        if proxima is None or proxima - agora() > ESPERA_RETENTATIVA_MAX:
+            break
+        dormir(max(0.0, proxima - agora()) + 0.5)
+    depois = queue.counts()
+    resumo = {
+        "tentativas": tentativas,
+        "salvos": depois.get(CONCLUIDO, 0) - antes.get(CONCLUIDO, 0),
+        "falhas": depois.get(FALHOU, 0) - antes.get(FALHOU, 0),
+    }
+    registrar_execucao(settings.execucao_path, inicio, agora(), **resumo)
+    return resumo
+
+
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Processa a fila de links do Kora.")
+    ap.add_argument("--once", action="store_true",
+                    help="esvazia a fila e sai (modo do timer do systemd); sem a flag, fica em loop")
+    args = ap.parse_args()
     settings = get_settings()
     configurar(settings.log_level)
     queue = Queue(settings.db_path)
@@ -90,9 +120,15 @@ def main() -> None:
     if garantir_indice(settings):
         log.info("índice Salvos.md criado")
     log.info("IA: %s", provider.label if provider else "desligada")
-    threading.Thread(target=batimento, args=(settings.heartbeat_path,), daemon=True).start()
     log.info("retomando %s item(ns) interrompido(s)", queue.requeue_stuck())
-    log.info("worker iniciado")
+    if args.once:
+        settings.heartbeat_path.unlink(missing_ok=True)  # sobra do modo contínuo; lote não tem batimento
+        log.info("lote iniciado: %s na fila", queue.counts().get("na_fila", 0))
+        resumo = executar_lote(queue, settings, provider)
+        log.info("lote concluído: %(salvos)s salvo(s), %(falhas)s falha(s), %(tentativas)s tentativa(s)", resumo)
+        return
+    threading.Thread(target=batimento, args=(settings.heartbeat_path,), daemon=True).start()
+    log.info("worker contínuo iniciado")
     try:
         while True:
             if not run_once(queue, settings, provider):

@@ -1,18 +1,15 @@
 [Unit]
-Description=Kora — worker (extração, transcrição, IA e notas)
+Description=Kora — lote: esvazia a fila (extração, transcrição, IA e notas)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+# Disparado por kora-worker.timer (ou pelo /processar do bot); roda e termina.
+Type=oneshot
 WorkingDirectory=@REPO@
-ExecStart=@REPO@/.venv/bin/kora-worker
-Restart=on-failure
-RestartSec=5
+ExecStart=@REPO@/.venv/bin/kora-worker --once
 # A transcrição usa a CPU toda; não atrapalha o resto da máquina.
 Nice=10
-TimeoutStopSec=30
+# Lote muito grande é morto aqui; o item em andamento volta para a fila no lote seguinte.
+TimeoutStartSec=6h
 NoNewPrivileges=true
-
-[Install]
-WantedBy=default.target
