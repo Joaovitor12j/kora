@@ -21,6 +21,7 @@ dev = ["pytest>=8"]
 [project.scripts]
 kora-bot = "kora.bot:main"
 kora-worker = "kora.worker:main"
+kora-reclassify = "kora.reclassificar:main"
 
 [build-system]
 requires = ["hatchling"]

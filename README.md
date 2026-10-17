@@ -24,11 +24,17 @@ funciona sozinho, com seu modelo no `.env` (`ANTHROPIC_MODEL`, `DEEPSEEK_MODEL`,
 chave faltar ou o nome estiver errado, o worker nem inicia. Se a chamada falhar, a nota fica em
 `Referencias/Salvos/_inbox/` com `status: pendente`.
 
+## Corrigir e reprocessar
+
+- **Categoria errada:** responda à mensagem "salvo em …" do bot com `categoria: design` (aceita as 10 categorias, sem diferenciar maiúsculas). A nota muda de pasta e o frontmatter é atualizado. Para links anteriores a essa função, responda à sua mensagem com o link.
+- **Notas pendentes** (IA fora do ar ou desligada): `uv run kora-reclassify [--limit N]` reprocessa as notas com `status: pendente`, mantém a data de criação e respeita categoria posta à mão.
+
 ## Rodar
 
 ```bash
 uv run kora-bot      # recebe links e grava na fila
 uv run kora-worker   # processa a fila e escreve as notas
+uv run kora-reclassify  # reprocessa notas pendentes
 uv run pytest        # testes
 ```
 

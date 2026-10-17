@@ -122,8 +122,8 @@ Notas: áudio baixado em pasta temporária (apagado ao fim); formato `bestaudio/
 - [x] Validar o JSON; se a categoria não for da lista, usar `outros`.
 - [x] Mover a nota para `Referencias/Salvos/<categoria>/`.
 - [x] Bot responde com categoria e resumo de uma linha.
-- [ ] Corrigir a categoria respondendo "categoria: X".
-- [ ] Reprocessar notas `pendente` (IA estava fora do ar).
+- [x] Corrigir a categoria respondendo "categoria: X" à mensagem do bot.
+- [x] Reprocessar notas `pendente` (`kora-reclassify`).
 
 Provedores (`src/kora/llm/`), um ativo por vez via `LLM_PROVIDER`: `anthropic` (SDK oficial, structured outputs, `claude-haiku-5-5`), `deepseek` (API compatível com OpenAI, modo JSON) e `ollama` (`/api/chat` com schema, `gemma4`). Taxonomia e regra de desempate em `taxonomia.py`. Conteúdo enviado ao modelo é limitado por `LLM_MAX_CHARS`.
 

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS itens (
     nota_path     TEXT,
     chat_id       INTEGER,
     message_id    INTEGER,
+    resposta_id   INTEGER,
     proxima_em    REAL NOT NULL DEFAULT 0,
     criado_em     REAL NOT NULL,
     atualizado_em REAL NOT NULL
@@ -42,6 +43,7 @@ class Item:
     nota_path: str | None
     chat_id: int | None
     message_id: int | None
+    resposta_id: int | None
 
 
 class Queue:
@@ -52,6 +54,13 @@ class Queue:
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(SCHEMA)
+        self._migrar()
+
+    def _migrar(self) -> None:
+        """Bancos criados antes de uma coluna existir ganham a coluna na abertura."""
+        colunas = {r["name"] for r in self._conn.execute("PRAGMA table_info(itens)")}
+        if "resposta_id" not in colunas:
+            self._conn.execute("ALTER TABLE itens ADD COLUMN resposta_id INTEGER")
 
     def close(self) -> None:
         self._conn.close()
@@ -137,6 +146,30 @@ class Queue:
         """Itens 'processando' de uma execução interrompida voltam para a fila."""
         cur = self._conn.execute("UPDATE itens SET status = ? WHERE status = ?", (NA_FILA, PROCESSANDO))
         return cur.rowcount
+
+    def set_resposta(self, item_id: int, resposta_id: int | None) -> None:
+        """Guarda a mensagem do bot que avisou o resultado, para a correção por resposta achar o item."""
+        if resposta_id is not None:
+            self._conn.execute("UPDATE itens SET resposta_id = ? WHERE id = ?", (resposta_id, item_id))
+
+    def set_nota(self, item_id: int, titulo: str, nota_path: str, now: float | None = None) -> None:
+        now = time.time() if now is None else now
+        self._conn.execute("UPDATE itens SET titulo = ?, nota_path = ?, atualizado_em = ? WHERE id = ?",
+                           (titulo, nota_path, now, item_id))
+
+    def find_by_resposta(self, chat_id: int, resposta_id: int) -> Item | None:
+        row = self._conn.execute("SELECT * FROM itens WHERE chat_id = ? AND resposta_id = ?",
+                                 (chat_id, resposta_id)).fetchone()
+        return self._item(row) if row else None
+
+    def find_by_message(self, chat_id: int, message_id: int) -> list[Item]:
+        rows = self._conn.execute("SELECT * FROM itens WHERE chat_id = ? AND message_id = ? ORDER BY id",
+                                  (chat_id, message_id)).fetchall()
+        return [self._item(r) for r in rows]
+
+    def by_canonica(self, url_canonica: str) -> Item | None:
+        row = self._conn.execute("SELECT * FROM itens WHERE url_canonica = ?", (url_canonica,)).fetchone()
+        return self._item(row) if row else None
 
     def get(self, item_id: int) -> Item | None:
         row = self._conn.execute("SELECT * FROM itens WHERE id = ?", (item_id,)).fetchone()

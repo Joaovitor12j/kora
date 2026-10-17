@@ -39,13 +39,15 @@ def resposta(meta: Meta) -> str:
     return f"salvo em {meta.categoria}: {meta.titulo}\n{primeira_frase(meta.resumo)}"
 
 
-def notify(settings: Settings, item: Item, text: str) -> None:
+def notify(settings: Settings, item: Item, text: str) -> int | None:
+    """Avisa no Telegram e devolve o id da mensagem enviada (None se não deu)."""
     if not item.chat_id:
-        return
+        return None
     try:
-        send_message(settings.telegram_bot_token, item.chat_id, text, item.message_id)
+        return send_message(settings.telegram_bot_token, item.chat_id, text, item.message_id)
     except Exception:
         log.exception("falha ao avisar no Telegram (item %s)", item.id)
+        return None
 
 
 def run_once(queue: Queue, settings: Settings, provider: Provider | None = None) -> bool:
@@ -62,7 +64,7 @@ def run_once(queue: Queue, settings: Settings, provider: Provider | None = None)
         if failed.status == FALHOU:
             notify(settings, item, f"não consegui salvar: {item.url_canonica}\n{str(e)[:200]}")
     else:
-        notify(settings, item, resposta(meta))
+        queue.set_resposta(item.id, notify(settings, item, resposta(meta)))
     return True
 
 

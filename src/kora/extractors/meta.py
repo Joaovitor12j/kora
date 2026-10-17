@@ -23,6 +23,7 @@ class Meta:
     categoria: str = ""
     tags: list[str] = field(default_factory=list)
     ia: str = ""  # provedor/modelo que classificou
+    criado: str = ""  # AAAA-MM-DD da nota original, preservado ao reprocessar
 
 
 def _titulo(raw: str | None, descricao: str, url: str) -> str:

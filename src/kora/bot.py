@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
 from .config import get_settings
+from .correcao import corrigir_categoria, pedido_de_categoria
 from .db import CONCLUIDO, FALHOU, Queue
 from .urls import canonicalize, extract_urls, needs_resolution, platform_of, resolve_redirects
 
@@ -13,6 +14,13 @@ log = logging.getLogger("kora.bot")
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     msg = update.effective_message
+    pedido = pedido_de_categoria(msg.text)
+    if pedido and msg.reply_to_message:
+        resposta = corrigir_categoria(
+            context.application.bot_data["queue"], context.application.bot_data["settings"],
+            msg.chat_id, msg.reply_to_message.message_id, pedido)
+        await msg.reply_text(resposta)
+        return
     urls = extract_urls(msg.text or "")
     if not urls:
         await msg.reply_text("Mande um link para eu salvar.")
@@ -43,6 +51,7 @@ def main() -> None:
     settings = get_settings()
     app = Application.builder().token(settings.telegram_bot_token).build()
     app.bot_data["queue"] = Queue(settings.db_path)
+    app.bot_data["settings"] = settings
     only_me = filters.Chat(chat_id=settings.telegram_allowed_chat_id)
     app.add_handler(MessageHandler(only_me & filters.TEXT & ~filters.COMMAND, on_message))
     log.info("bot iniciado (long polling)")

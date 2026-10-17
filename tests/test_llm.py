@@ -16,22 +16,8 @@ from kora.llm.deepseek import DeepSeekProvider
 from kora.llm.ollama import OllamaProvider
 from kora.llm.prompt import system_prompt, user_prompt
 from kora.llm.schema import SCHEMA, Classificacao, parse
+from helpers import BOM, Fake
 from kora.vault import destino, render, tags_existentes
-
-BOM = {"titulo": " Motion com Claude ", "resumo": "Resumo.\nSegunda linha.", "pontos_chave": ["a", " ", "b"],
-       "categoria": "DESIGN", "tags": ["#Motion Graphics", "claude", "claude", ""]}
-
-
-class Fake(Provider):
-    def __init__(self, name, resposta=None, erro=None):
-        self.name, self.model, self.resposta, self.erro, self.chamadas = name, "m", resposta, erro, 0
-
-    def complete(self, system, user, schema):
-        self.chamadas += 1
-        if self.erro:
-            raise self.erro
-        return self.resposta
-
 
 # --- schema / parse ---------------------------------------------------------
 
