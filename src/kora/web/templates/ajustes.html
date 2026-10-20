@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block titulo %}Ajustes · Kora{% endblock %}
 {% block conteudo %}
 {% macro campo(rotulo, nome, valor, ajuda="", tipo="text", extra="") %}
 <div class="campo">
@@ -124,4 +123,4 @@
   </form>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/ajustes.js"></script>{% endblock %}
+{% block scripts %}<script src="{{ estatico('ajustes.js') }}"></script>{% endblock %}

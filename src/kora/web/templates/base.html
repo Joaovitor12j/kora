@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Unbounded:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/kora.css">
+<link rel="stylesheet" href="{{ estatico('kora.css') }}">
 </head>
 <body>
 <a class="pular" href="#principal">Ir para o conteúdo</a>
@@ -20,7 +20,7 @@
   </a>
   <nav class="abas" aria-label="Seções">
     <a href="/" {% if pagina == "salvos" %}aria-current="page"{% endif %}>Salvos</a>
-    <a href="/fila" {% if pagina == "fila" %}aria-current="page"{% endif %}>Fila</a>
+    <a href="/fila" {% if pagina == "fila" %}aria-current="page"{% endif %}>Fila{% if fila_total %}<span class="selo" aria-hidden="true">{{ fila_total if fila_total < 100 else "99+" }}</span><span class="so-leitor"> ({{ fila_total }} {{ "item" if fila_total == 1 else "itens" }})</span>{% endif %}</a>
     <a href="/ajustes" {% if pagina == "ajustes" %}aria-current="page"{% endif %}>Ajustes</a>
   </nav>
 </header>
@@ -28,7 +28,7 @@
 {% block conteudo %}{% endblock %}
 </main>
 <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
-<script src="/static/kora.js"></script>
+<script src="{{ estatico('kora.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

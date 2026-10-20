@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "_sigilo.html" import sigilo %}
-{% block titulo %}Salvos · Kora{% endblock %}
 {% block conteudo %}
 {% macro linha(e) %}
 <a class="linha" href="/nota?p={{ e.rel|urlencode }}" data-nota="{{ e.rel }}">
@@ -114,4 +113,4 @@
   <div id="gaveta-corpo"></div>
 </aside>
 {% endblock %}
-{% block scripts %}<script src="/static/acervo.js"></script>{% endblock %}
+{% block scripts %}<script src="{{ estatico('acervo.js') }}"></script>{% endblock %}

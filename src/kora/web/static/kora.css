@@ -74,6 +74,10 @@ code { font: .88em ui-monospace, "SF Mono", Menlo, monospace; padding: .1em .4em
 .abas a:hover { color: var(--texto); }
 .abas a[aria-current="page"] { color: var(--ciano); background: rgba(61, 240, 255, .08); box-shadow: inset 0 0 0 1px rgba(61, 240, 255, .25); }
 
+.abas a { display: inline-flex; align-items: center; gap: 8px; }
+.selo { min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 999px; background: var(--ciano); color: #04101a; font: 600 12px/1 var(--corpo); font-variant-numeric: tabular-nums; box-shadow: 0 0 12px rgba(61, 240, 255, .4); }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
 main { padding: 0 var(--gutter) 96px; max-width: 1280px; margin: 0 auto; }
 
 /* Busca */

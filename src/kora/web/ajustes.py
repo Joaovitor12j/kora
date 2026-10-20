@@ -165,7 +165,7 @@ def ler_intervalo(path: Path | None = None) -> dict:
         texto = path.read_text(encoding="utf-8")
     except OSError:
         return lotes
-    if m := re.findall(r"^OnBootSec=(\d+)min\s*$", texto, re.M):
+    if m := re.findall(r"^OnActiveSec=(\d+)min\s*$", texto, re.M):
         lotes["primeiro_min"] = int(m[-1])
     if m := re.findall(r"^OnUnitInactiveSec=(\d+)h\s*$", texto, re.M):
         lotes["intervalo_h"] = int(m[-1])
@@ -188,7 +188,7 @@ def gravar_intervalo(lotes: dict, path: Path | None = None) -> bool:
     """Grava o drop-in do systemd. True se o conteúdo mudou."""
     path = path or DROPIN
     # A linha vazia zera o valor do timer original antes de aplicar o novo.
-    texto = ("[Timer]\nOnBootSec=\n" f"OnBootSec={lotes['primeiro_min']}min\n"
+    texto = ("[Timer]\nOnActiveSec=\n" f"OnActiveSec={lotes['primeiro_min']}min\n"
              "OnUnitInactiveSec=\n" f"OnUnitInactiveSec={lotes['intervalo_h']}h\n")
     try:
         if path.read_text(encoding="utf-8") == texto:

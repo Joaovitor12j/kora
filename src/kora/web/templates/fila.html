@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block titulo %}Fila · Kora{% endblock %}
 {% block conteudo %}
 <div class="folha estreita">
   <header class="cabeca-folha">
@@ -45,4 +44,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/fila.js"></script>{% endblock %}
+{% block scripts %}<script src="{{ estatico('fila.js') }}"></script>{% endblock %}

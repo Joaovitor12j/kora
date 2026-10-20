@@ -2,9 +2,10 @@
 Description=Kora — processa a fila de links em lotes
 
 [Timer]
-# Primeiro lote 1 h depois de ligar; depois, 8 h após o fim de cada lote.
+# Primeiro lote 1 h depois de o timer iniciar (ligar o PC ou reinstalar); depois, 8 h após o fim de cada lote.
+# OnActiveSec (e não OnBootSec): se o timer reiniciar com o PC já ligado há mais de 1 h, OnBootSec já teria passado e a cadeia nunca começaria.
 # Os dois contam só o tempo com a máquina ligada (relógio monotônico).
-OnBootSec=1h
+OnActiveSec=1h
 OnUnitInactiveSec=8h
 
 [Install]

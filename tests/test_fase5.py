@@ -130,7 +130,7 @@ def test_worker_runs_in_batches_driven_by_timer():
     servico = (RAIZ / "deploy" / "kora-worker.service").read_text()
     assert "Type=oneshot" in servico and "kora-worker --once" in servico and "[Install]" not in servico
     timer = (RAIZ / "deploy" / "kora-worker.timer").read_text()
-    assert "OnBootSec=1h" in timer and "OnUnitInactiveSec=8h" in timer and "WantedBy=timers.target" in timer
+    assert "OnActiveSec=1h" in timer and "OnUnitInactiveSec=8h" in timer and "WantedBy=timers.target" in timer
 
 
 def test_install_script_enables_timer_not_oneshot_service():

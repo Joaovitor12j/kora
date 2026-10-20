@@ -324,3 +324,36 @@ def test_tela_de_ajustes_remota_trava_o_acesso(remoto):
     html = remoto.get("/ajustes").text
     assert "abra a Kora pelo próprio computador" in html
     assert re.search(r'name="WEB_HOSTS"[^>]*readonly', html) and re.search(r'name="WEB_ALLOWED_USERS"[^>]*readonly', html)
+
+
+def test_selo_da_fila_conta_aguardando_e_processando_sem_as_falhas(s, c):
+    assert 'class="selo"' not in c.get("/").text  # fila vazia: sem selo
+    q = Queue(s.db_path)
+    for n in range(1, 5):
+        q.enqueue(f"https://x.com/u/status/{n}", f"https://x.com/u/status/{n}", "x")
+    q.claim_next()  # um vira "processando"
+    falho = q.claim_next()
+    q.fail(falho.id, "erro", now=0)
+    q.fail(falho.id, "erro", now=0)
+    q.fail(falho.id, "erro", now=0)
+    contagem = q.counts()
+    assert contagem.get("falhou") == 1  # a falha não entra no selo
+    esperado = contagem.get("na_fila", 0) + contagem.get("processando", 0)
+    q.close()
+    html = c.get("/fila").text
+    assert f'<span class="selo" aria-hidden="true">{esperado}</span>' in html
+    assert f"({esperado} itens)" in html and esperado >= 2
+
+
+def test_arquivos_estaticos_vao_com_versao_para_nao_ficar_em_cache(s, c):
+    html = c.get("/").text
+    for arquivo in ("kora.css", "kora.js", "acervo.js"):
+        assert re.search(rf'/static/{re.escape(arquivo)}\?v=\d+"', html), arquivo
+    assert c.get("/static/kora.css?v=1").status_code == 200
+
+
+def test_titulo_da_aba_e_sempre_kora(s, c):
+    path = nota(s, "Detalhe", "design")
+    rel = path.relative_to(s.saved_dir).as_posix()
+    for url in ("/", "/fila", "/ajustes", f"/nota?p={rel}", "/nota?p=nao-existe.md"):
+        assert "<title>Kora</title>" in c.get(url).text, url

@@ -37,10 +37,29 @@ log = logging.getLogger("kora.web")
 AQUI = Path(__file__).parent
 PORTA_PADRAO = 8765
 
-templates = Jinja2Templates(
-    directory=AQUI / "templates",
-    context_processors=[lambda req: {"remoto": getattr(req.state, "remoto", False),
-                                     "usuario": getattr(req.state, "usuario", "")}])
+
+
+def _contexto(req: Request) -> dict:
+    with fila() as q:
+        contagem = q.counts()
+    return {"remoto": getattr(req.state, "remoto", False), "usuario": getattr(req.state, "usuario", ""),
+            # o selo da aba Fila: o que ainda vai ser processado (falhas têm a sua seção na página)
+            "fila_total": contagem.get(NA_FILA, 0) + contagem.get(PROCESSANDO, 0)}
+
+
+templates = Jinja2Templates(directory=AQUI / "templates", context_processors=[_contexto])
+
+
+def estatico(arquivo: str) -> str:
+    """URL do arquivo com a data de modificação: o navegador baixa de novo sempre que ele muda."""
+    try:
+        versao = int((AQUI / "static" / arquivo).stat().st_mtime)
+    except OSError:
+        versao = 0
+    return f"/static/{arquivo}?v={versao}"
+
+
+templates.env.globals["estatico"] = estatico
 templates.env.globals["sigilo_chave"] = chave_do_sigilo
 templates.env.filters["data_br"] = acervo.data_br
 
