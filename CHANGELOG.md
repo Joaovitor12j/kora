@@ -6,6 +6,10 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
 
 ## [Não lançado]
 
+## [0.2.0] - 2026-10-20
+
+Interface web local, com acesso de fora pelo Tailscale, e correção do timer dos lotes.
+
 ### Adicionado
 
 - **Interface web local** (`kora-web`, em `http://127.0.0.1:8765`, serviço `kora-web.service`):
@@ -18,6 +22,17 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
   de usuários autorizados (login do `tailscale serve`). Aviso no topo para quem entra de fora; a lista de quem pode
   entrar só se muda no computador da Kora. Configurável na seção "Acesso de fora" dos Ajustes.
 - Categorias configuráveis: passam a ser lidas de `data/categorias.json` (as de fábrica continuam como padrão).
+
+### Corrigido
+
+- **Fila parada por dias:** `kora-worker.timer` usava `OnBootSec`; se o timer reiniciasse com o computador ligado há
+  mais de 1 h, o gatilho já tinha passado e o `OnUnitInactiveSec` nunca começava, então nenhum lote rodava. Agora usa
+  `OnActiveSec` (o primeiro lote sai 1 h depois de o timer iniciar). Quem já instalou deve rodar `deploy/install.sh`
+  de novo.
+
+### Documentação
+
+- Tailscale Serve passa a usar `--https=10000` no exemplo, porque a 443 e a 8443 costumam estar ocupadas.
 
 ## [0.1.0] - 2026-10-17
 

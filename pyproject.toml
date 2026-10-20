@@ -1,6 +1,6 @@
 [project]
 name = "kora"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bot do Telegram que salva links como notas no Obsidian"
 requires-python = ">=3.12"
 dependencies = [
