@@ -180,3 +180,16 @@ def test_processar_replies(q, monkeypatch):
 def test_worker_cli_has_once_flag():
     r = subprocess.run(["uv", "run", "-q", "kora-worker", "--help"], capture_output=True, text=True)
     assert r.returncode == 0 and "--once" in r.stdout
+
+
+def test_verificar_timers_detecta_gatilho_perdido():
+    completo = "TimersMonotonic={ OnActiveUSec=1h ; next_elapse=1h }{ OnUnitInactiveUSec=8h ; next_elapse=0 }"
+    assert agenda.verificar_timers(completo) is None
+    # o caso real: reset duplicado no drop-in apagou o OnActiveSec
+    defeito = agenda.verificar_timers("TimersMonotonic={ OnUnitInactiveUSec=8h ; next_elapse=0 }")
+    assert defeito and "OnActiveUSec" in defeito
+
+
+def test_status_avisa_agendamento_quebrado(s):
+    linha = linhas_worker(s, 1000.0, Agenda(instalada=True, defeito="faltam OnActiveUSec no timer"))[-1]
+    assert "Agendamento quebrado" in linha and "OnActiveUSec" in linha

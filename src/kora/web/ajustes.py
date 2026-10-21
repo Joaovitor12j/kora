@@ -8,7 +8,7 @@ from pathlib import Path
 import httpx
 
 from .. import taxonomia
-from ..agenda import TIMER, _systemctl, iniciar_lote
+from ..agenda import TIMER, _systemctl, conferir_timer, iniciar_lote
 from ..config import Settings, get_settings
 from ..llm import PROVEDORES, build_provider
 
@@ -187,9 +187,10 @@ def validar_intervalo(primeiro_min, intervalo_h) -> dict:
 def gravar_intervalo(lotes: dict, path: Path | None = None) -> bool:
     """Grava o drop-in do systemd. True se o conteúdo mudou."""
     path = path or DROPIN
-    # A linha vazia zera o valor do timer original antes de aplicar o novo.
+    # Uma linha vazia zera TODOS os timers do unit (qualquer On*Sec), então só pode haver uma,
+    # antes dos novos valores; uma segunda apagaria o que acabou de ser definido.
     texto = ("[Timer]\nOnActiveSec=\n" f"OnActiveSec={lotes['primeiro_min']}min\n"
-             "OnUnitInactiveSec=\n" f"OnUnitInactiveSec={lotes['intervalo_h']}h\n")
+             f"OnUnitInactiveSec={lotes['intervalo_h']}h\n")
     try:
         if path.read_text(encoding="utf-8") == texto:
             return False
@@ -235,6 +236,8 @@ def aplicar(env: dict[str, str], categorias: dict[str, str] | None, lotes: dict 
         ok, det = _sistema("daemon-reload")
         ok2, det2 = _sistema("restart", TIMER)
         passos.append(Passo("Agenda dos lotes atualizada", ok and ok2, det or det2))
+        if ok and ok2 and (defeito := conferir_timer()):
+            passos.append(Passo("Agenda dos lotes conferida", False, defeito))
     if env or categorias is not None:
         ok, det = _sistema("restart", "kora-bot.service")
         passos.append(Passo("Bot reiniciado", ok, "" if ok else det or "serviço não instalado"))

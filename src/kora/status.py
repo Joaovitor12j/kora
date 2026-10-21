@@ -48,6 +48,9 @@ def linhas_worker(settings: Settings, agora: float, agenda: Agenda | None = None
     if not agenda.instalada:
         return [linha_ultima, "• Agendamento: não instalado (deploy/install.sh)"]
     if agenda.proxima is None:
+        if agenda.defeito:
+            return [linha_ultima, f"• ⚠️ Agendamento quebrado: {agenda.defeito}. Salve o intervalo em Ajustes "
+                                  "ou rode deploy/install.sh"]
         return [linha_ultima, "• Próxima: indisponível"]
     if agenda.proxima > agora:
         return [linha_ultima, f"• Próxima: em {idade(agenda.proxima - agora)}"]
