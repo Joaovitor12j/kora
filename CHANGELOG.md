@@ -6,6 +6,17 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
 
 ## [Não lançado]
 
+### Corrigido
+
+- O intervalo gravado pela interface deixava o timer dos lotes sem agendamento: o drop-in tinha dois
+  resets (`OnActiveSec=` e `OnUnitInactiveSec=`) e cada um zera todos os `On*Sec` do timer, então o
+  `OnActiveSec` sumia e a fila parava. Agora há um único reset antes dos valores.
+
+### Adicionado
+
+- Conferência do agendamento: ao salvar o intervalo, a interface confere no systemd se os dois gatilhos
+  existem e acusa o defeito; o `/status` do bot avisa "Agendamento quebrado" em vez de só "indisponível".
+
 ## [0.2.0] - 2026-10-20
 
 Interface web local, com acesso de fora pelo Tailscale, e correção do timer dos lotes.

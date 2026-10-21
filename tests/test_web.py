@@ -36,6 +36,7 @@ def s(tmp_path, monkeypatch):
     monkeypatch.setenv("DB_PATH", str(tmp_path / "data/queue.sqlite"))
     monkeypatch.setattr(ajustes, "DROPIN", tmp_path / "timer.d/intervalo.conf")
     monkeypatch.setattr(ajustes, "_sistema", lambda *a: (True, ""))
+    monkeypatch.setattr(ajustes, "conferir_timer", lambda: None)  # sem consultar o systemd real
     get_settings.cache_clear()
     acervo._cache.clear()
     yield get_settings()
@@ -192,7 +193,7 @@ def test_intervalo_roundtrip_e_limites(tmp_path):
     assert ajustes.gravar_intervalo({"primeiro_min": 30, "intervalo_h": 4}, arq) is True
     assert ajustes.gravar_intervalo({"primeiro_min": 30, "intervalo_h": 4}, arq) is False
     assert ajustes.ler_intervalo(arq) == {"primeiro_min": 30, "intervalo_h": 4}
-    assert "OnUnitInactiveSec=\nOnUnitInactiveSec=4h" in arq.read_text(encoding="utf-8")
+    assert "OnActiveSec=\nOnActiveSec=" in arq.read_text(encoding="utf-8")
     for ruim in ((0, 8), (60, 0), (60, 999), ("x", 8)):
         with pytest.raises(ajustes.ErroDeAjuste):
             ajustes.validar_intervalo(*ruim)
@@ -357,3 +358,9 @@ def test_titulo_da_aba_e_sempre_kora(s, c):
     rel = path.relative_to(s.saved_dir).as_posix()
     for url in ("/", "/fila", "/ajustes", f"/nota?p={rel}", "/nota?p=nao-existe.md"):
         assert "<title>Kora</title>" in c.get(url).text, url
+
+
+def test_aplicar_acusa_timer_sem_agenda(s, monkeypatch):
+    monkeypatch.setattr(ajustes, "conferir_timer", lambda: "faltam OnActiveUSec no timer")
+    passos = ajustes.aplicar({}, None, {"primeiro_min": 30, "intervalo_h": 4})
+    assert not passos[-1].ok and "OnActiveUSec" in passos[-1].detalhe
