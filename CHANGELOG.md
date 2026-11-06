@@ -77,8 +77,7 @@ Primeira versão: o fluxo completo funciona, do link no Telegram até a nota no 
   que atualiza o `yt-dlp`; `deploy/install.sh` para instalar e remover.
 - **Retentativas:** 3 tentativas com espera crescente; depois disso o item fica como `falhou` e o bot avisa.
 - **Logs** sem o token do bot (as bibliotecas de HTTP ficam silenciadas) e batimento do worker contínuo.
-- **README** completo, com imagens e os próximos passos, com as decisões
-  e os resultados da validação técnica.
+- **README** completo, com imagens e os próximos passos.
 
 ### Limitações conhecidas
 
