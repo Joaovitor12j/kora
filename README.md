@@ -31,6 +31,7 @@ assistentes de IA consultarem).
 - [Desenvolvimento](#desenvolvimento)
 - [Limitações conhecidas](#limitações-conhecidas)
 - [Próximos passos](#próximos-passos)
+- [Identidade visual](#identidade-visual)
 - [Contribuindo](#contribuindo)
 - [Licença](#licença)
 
@@ -241,6 +242,9 @@ provedores; veja o item 1 de [Próximos passos](#próximos-passos).
 uv run kora-web        # ou, com o deploy/install.sh, já fica ligada: http://127.0.0.1:8765
 ```
 
+<p align="center"><img src="docs/img/ui-salvos.png" width="860" alt="Aba Salvos: busca, categorias com sigilos, filtros e links agrupados por dia"></p>
+<p align="center"><sub>Aba Salvos, com dados fictícios.</sub></p>
+
 Três abas. O vault continua sendo a fonte da verdade: a galeria só lê as notas e, quando você corrige uma
 categoria, move o arquivo como o bot já faz.
 
@@ -255,6 +259,8 @@ categoria, move o arquivo como o bot já faz.
   comentários e a permissão do arquivo), grava `data/categorias.json`, grava o intervalo em
   `~/.config/systemd/user/kora-worker.timer.d/intervalo.conf` e reinicia o bot. O worker roda em lote e lê tudo
   no próximo.
+
+<p align="center"><img src="docs/img/ui-ajustes.png" width="860" alt="Aba Ajustes: provedor de IA, lotes e limites"></p>
 
 **Segurança.** Só escuta em `127.0.0.1`. Toda requisição confere o `Host` (contra DNS rebinding) e toda escrita
 exige JSON e `Origin` local, então uma página aberta no navegador não consegue acionar o painel. As chaves de API
@@ -449,6 +455,22 @@ OCR de quadros vale o custo.
 - Embeddings locais (`sqlite-vec`) e um servidor MCP com `buscar_salvos(pergunta)`, quando o volume passar de
   algumas centenas de notas.
 
+## Identidade visual
+
+<p align="center"><img src="marca/simbolo-cor.svg" height="120" alt="Símbolo da Kora: o k formado por uma haste de marcador de página ciano e um chevron magenta"></p>
+
+O **k** é um marcador de página: a haste (ciano, com o entalhe em V) é o marcador, e o braço e a perna formam um
+chevron magenta, o mesmo traço dos padrões geométricos de inspiração Akan do avatar. Salvar, o nome e a origem num
+desenho só. A interface segue a marca: fundo Noite, cor só em destaque (ciano = ativo, magenta = pendente ou
+alerta), sem brilho em botões e cartões, títulos em Bricolage Grotesque e texto em Instrument Sans, e um sigilo
+próprio por categoria, desenhado com o vocabulário do k.
+
+| Noite | Ciano | Magenta | Névoa | Tinta |
+|---|---|---|---|---|
+| `#070A1C` | `#3DF0FF` | `#F046B4` | `#E7ECFF` | `#15130F` |
+
+Logos, ícones, PNGs e o guia de uso (área de proteção, o que não fazer, como regerar) estão em [`marca/`](marca/README.md).
+
 ## Contribuindo
 
 Issues e PRs são bem-vindos. Antes de abrir um PR, rode `uv run pytest`. Nunca inclua tokens, chaves, cookies ou
@@ -458,3 +480,15 @@ arquivos de configuração e dados locais em issues, logs ou commits.
 
 [MIT](LICENSE). O logo, o avatar e os arquivos em `marca/` e `docs/img/` fazem parte da identidade da Kora e
 acompanham a mesma licença, mas não devem ser usados para sugerir endosso de terceiros.
+
+---
+
+<p align="center">
+  <a href="https://joaovitorsantos.com.br">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/img/jovitor-cor.svg">
+      <img src="docs/img/jovitor-tinta.svg" height="36" alt="Jovitor">
+    </picture>
+  </a>
+</p>
+<p align="center"><sub>Um produto <strong>Jovitor</strong>, por <a href="https://github.com/Joaovitor12j">João Vitor Santos</a>.</sub></p>
