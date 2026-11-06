@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kora import logs, status, worker
+from kora import logs, worker
 from kora.config import Settings
 from kora.db import Queue
 from kora.status import estado_ia, idade, linhas_worker, montar_status, plural

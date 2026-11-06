@@ -3,8 +3,7 @@ nome: Kora
 resumo: Bot do Telegram que transforma links em notas organizadas no Obsidian, com transcrição do áudio e categorização por IA.
 descricao: Você manda o link de um Reel, TikTok, tweet, vídeo ou artigo para o bot no Telegram. A Kora extrai o conteúdo, transcreve o áudio localmente, pede a uma IA resumo, pontos-chave, categoria e tags e grava a nota pronta no vault do Obsidian, em pastas por categoria. Dá para buscar pelo bot, corrigir a categoria respondendo ao aviso e processar a fila em lotes pelo systemd. Uma interface web local mostra os links salvos (busca, filtros, detalhes) e ajusta IA, lotes e categorias.
 status: no-ar
-visibilidade: parcial
-motivo: Uso pessoal; o repositório é privado e ainda não há versão estável para compartilhar o código.
+visibilidade: publico
 tecnologias: [Python, SQLite, yt-dlp, faster-whisper, Telegram, Obsidian]
 icone: docs/img/kora.png
 cor: "#22d3ee"

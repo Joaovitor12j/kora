@@ -9,6 +9,11 @@
 
 <p align="center"><em>Kora</em> = "salvar" em Akan.</p>
 
+<p align="center">
+  <img alt="Python 3.12+" src="https://img.shields.io/badge/python-3.12%2B-3776ab">
+  <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-green">
+</p>
+
 Kora é um bot do Telegram que transforma links soltos em notas organizadas no seu vault do Obsidian.
 Você manda o link de um Reel, TikTok, tweet, vídeo ou artigo; a Kora baixa o que for preciso, transcreve o
 áudio, pede a uma IA um resumo e uma categoria e grava uma nota pronta para consultar (e para os seus
@@ -26,6 +31,8 @@ assistentes de IA consultarem).
 - [Desenvolvimento](#desenvolvimento)
 - [Limitações conhecidas](#limitações-conhecidas)
 - [Próximos passos](#próximos-passos)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
 
 ## Como funciona
 
@@ -74,8 +81,8 @@ fala gera nota sem a seção de transcrição, e isso é esperado.
 criado: 2026-10-17
 tipo: link
 plataforma: instagram
-url: "https://www.instagram.com/reel/DeiT3aSAmvG/"
-autor: "Pedro Augusto"
+url: "https://www.instagram.com/reel/EXEMPLO/"
+autor: "Fulano de Tal"
 publicado: 2026-10-16
 categoria: IA
 tags: [claude, plugins, produtividade]
@@ -268,7 +275,7 @@ HTTPS. O computador da Kora precisa estar ligado.
    ```
 
    O comando mostra o endereço, algo como `https://meu-pc.rede.ts.net:10000`. O `--https=10000` evita a porta 443
-   (padrão do Tailscale Serve), que costuma já estar em uso (aqui, a 443 e a 8443 são de containers); troque por outra porta livre se precisar (o Tailscale
+   (padrão do Tailscale Serve), que costuma já estar em uso; troque por outra porta livre se precisar (o Tailscale
    aceita só 443, 8443 e 10000). O `WEB_HOSTS` leva só o nome do host, sem a porta.
 2. Diga à Kora quem pode entrar, em Ajustes, na seção "Acesso de fora" (ou no `.env`):
 
@@ -348,6 +355,7 @@ src/kora/
 deploy/                # units do systemd e scripts de instalação
 docs/PLANO.md          # plano, decisões e resultados da validação técnica
 spike/                 # scripts da Fase 0 (testar links e medir o Whisper)
+marca/                 # identidade visual: logos, ícones e guia (marca/README.md)
 tests/                 # testes automatizados
 ```
 
@@ -440,3 +448,13 @@ OCR de quadros vale o custo.
 - Suporte ao carrossel `/photo/` do TikTok.
 - Embeddings locais (`sqlite-vec`) e um servidor MCP com `buscar_salvos(pergunta)`, quando o volume passar de
   algumas centenas de notas.
+
+## Contribuindo
+
+Issues e PRs são bem-vindos. Antes de abrir um PR, rode `uv run pytest`. Nunca inclua tokens, chaves, cookies ou
+arquivos de configuração e dados locais em issues, logs ou commits.
+
+## Licença
+
+[MIT](LICENSE). O logo, o avatar e os arquivos em `marca/` e `docs/img/` fazem parte da identidade da Kora e
+acompanham a mesma licença, mas não devem ser usados para sugerir endosso de terceiros.

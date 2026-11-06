@@ -2,7 +2,7 @@
 
 > *Kora* = "salvar" em Akan. Bot que salva links e os transforma em notas no Obsidian.
 
-Origem: nota `Bot de links para o Obsidian` no vault (ideia de 2026-10-17).
+Ideia de 2026-10-17.
 
 ## Arquitetura
 
@@ -19,7 +19,7 @@ Telegram ──(long polling)──> bot ──> fila (SQLite)
                assistentes leem o vault (arquivos ou MCP)
 ```
 
-- **Código fora do vault**: repositório próprio (`~/GitProjects/kora`). O vault só recebe as notas; o Obsidian Git já commita.
+- **Código fora do vault**: repositório próprio. O vault só recebe as notas; o Obsidian Git já commita.
 - **Stack**: Python 3.12, `python-telegram-bot`, `yt-dlp` (como biblioteca), `faster-whisper`, `trafilatura` (artigos), SQLite.
 - **LLM**: Claude API (Haiku, barato e bom em JSON) ou Ollama local. Começar com Claude; trocar depois se quiser 100% local.
 
@@ -95,7 +95,7 @@ Critério: ≥ 80% dos links de teste geram metadados + áudio utilizável.
 - **TikTok `/photo/`** (carrossel): extractor do yt-dlp não suporta, oEmbed devolve 400 e o HTML não traz `desc` no JSON de rehydration. Tratar como nota só com URL (`status: falhou`) até haver necessidade.
 - **Instagram foto**: yt-dlp não suporta; fallback via `og:title`/`og:description` (UA `facebookexternalhit`) devolve legenda e autor.
 - Com `--impersonate` + fallback og:tags do IG: 7/9 com conteúdo (áudio/legenda), 78%; os 2 restantes são posts de foto (IG com og:tags dá legenda → 8/9, 89%, critério de 80% atingido).
-- **faster-whisper (pt, vídeo de 71 s)**: CPU `small` int8 = 11,6 s (1704 chars, boa qualidade); `medium` = 30,1 s (sem ganho claro). **Decisão: `small` na CPU.** GPU (RTX 2050) falha por falta de `libcublas.so.12`; não necessário.
+- **faster-whisper (pt, vídeo de 71 s)**: CPU `small` int8 = 11,6 s (1704 chars, boa qualidade); `medium` = 30,1 s (sem ganho claro). **Decisão: `small` na CPU.** GPU falha por falta de `libcublas.so.12`; não necessário.
 - Dependência: `faster-whisper` 1.2.1 exige `av<16` (PyAV 19 quebra com `metadata_errors`).
 - Pendente: onde o bot roda (retenção de 24 h do Telegram).
 
@@ -152,7 +152,7 @@ Implementação: `deploy/` (units, `install.sh`, `update-ytdlp.sh`), `status.py`
 - **Instagram/TikTok mudam e bloqueiam**: `yt-dlp` quebra de tempos em tempos; cookies de login podem expirar ou levar a conta a ser sinalizada. Usar cookies de uma conta secundária, se possível.
 - **X**: API oficial paga; alternativas são frágeis. Tweet de texto pode ficar sem conteúdo.
 - **Custo da IA**: com Haiku, centavos por centena de links. Transcrição local não custa nada além de CPU.
-- **Privacidade**: token, cookies e `.env` nunca no vault (o repositório vai para o GitHub).
+- **Privacidade**: token, cookies e `.env` nunca no vault.
 - Taxonomia: quais categorias realmente uso? Definir olhando os últimos ~30 links salvos.
 
 ## Ordem de execução

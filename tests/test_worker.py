@@ -2,7 +2,7 @@ import pytest
 
 from kora import worker
 from kora.config import Settings
-from kora.db import CONCLUIDO, FALHOU, NA_FILA, Queue
+from kora.db import CONCLUIDO, FALHOU, Queue
 from kora.extractors.meta import Meta
 
 

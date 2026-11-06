@@ -1,7 +1,6 @@
 """Leitura e gravação das configurações do painel: .env, categorias e intervalo dos lotes."""
 import os
 import re
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
