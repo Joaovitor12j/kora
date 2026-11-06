@@ -5,7 +5,7 @@ descricao: Você manda o link de um Reel, TikTok, tweet, vídeo ou artigo para o
 status: no-ar
 visibilidade: publico
 tecnologias: [Python, SQLite, yt-dlp, faster-whisper, Telegram, Obsidian]
-icone: docs/img/kora.png
+icone: marca/png/icone-app-1024.png
 cor: "#22d3ee"
 forma: livros
 arquitetura:

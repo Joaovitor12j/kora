@@ -1,9 +1,7 @@
-<p align="center"><img src="docs/img/kora.png" width="200" alt="Kora: androide cyberpunk com visor ciano e um marcador de livro luminoso na testa"></p>
-
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="marca/palavra-cor.svg">
-    <img src="marca/palavra-tinta.svg" height="44" alt="Kora">
+    <img src="marca/palavra-tinta.svg" height="64" alt="Kora">
   </picture>
 </h1>
 
@@ -134,9 +132,6 @@ vai para `IA` com a tag `github`. A lista de fábrica fica em `src/kora/taxonomi
 ## Ferramentas disponíveis
 
 ### Comandos e gestos no Telegram
-
-<p align="center"><img src="docs/img/telegram.svg" width="430" alt="Conversa com a Kora: link enviado, aviso de salvo e o comando /status"></p>
-<p align="center"><sub>Ilustração montada com respostas reais do bot.</sub></p>
 
 | O que fazer | Para que serve |
 |---|---|
