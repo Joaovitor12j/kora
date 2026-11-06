@@ -4,10 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block titulo %}Kora{% endblock %}</title>
-<link rel="icon" href="/static/kora-avatar.webp" type="image/webp">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/static/icon-180.png">
+<link rel="manifest" href="/static/site.webmanifest">
+<meta name="theme-color" content="#070a1c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Unbounded:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="{{ estatico('kora.css') }}">
 </head>
 <body>
@@ -15,8 +19,7 @@
 {% if remoto %}<p class="aviso-remoto" role="note">Acesso de fora{% if usuario %} como {{ usuario }}{% endif %}. O que você muda aqui vale no computador da Kora.</p>{% endif %}
 <header class="topo">
   <a class="marca" href="/" aria-label="Kora, início">
-    <img class="avatar" src="/static/kora-avatar.webp" width="36" height="36" alt="">
-    <span>kora</span>
+    <img class="palavra" src="/static/kora-palavra.svg" height="28" alt="kora">
   </a>
   <nav class="abas" aria-label="Seções">
     <a href="/" {% if pagina == "salvos" %}aria-current="page"{% endif %}>Salvos</a>

@@ -1,6 +1,11 @@
 <p align="center"><img src="docs/img/kora.png" width="200" alt="Kora: androide cyberpunk com visor ciano e um marcador de livro luminoso na testa"></p>
 
-<h1 align="center">Kora</h1>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="marca/palavra-cor.svg">
+    <img src="marca/palavra-tinta.svg" height="44" alt="Kora">
+  </picture>
+</h1>
 
 <p align="center"><em>Kora</em> = "salvar" em Akan.</p>
 

@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><title>Kora E - marcador tecido de chevrons</title>
+<defs><clipPath id="m"><path d="M60 12H196V244L128 192L60 244Z"/></clipPath></defs>
+<g clip-path="url(#m)" fill="none" stroke-width="22" stroke-linejoin="miter" stroke-miterlimit="6">
+<path stroke="#3DF0FF" d="M40 40L128 100L216 40"/><path stroke="#F046B4" d="M40 92L128 152L216 92"/><path stroke="#3DF0FF" d="M40 144L128 204L216 144"/><path stroke="#3DF0FF" d="M40 196L128 256L216 196"/></g></svg>

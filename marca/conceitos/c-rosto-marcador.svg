@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><title>Kora C - rosto marcador</title>
+<path fill="#F046B4" d="M64 236V112A64 64 0 0 1 192 112V236Z"/>
+<path fill="#070a1c" d="M72 236V112A56 56 0 0 1 184 112V236Z"/>
+<rect x="44" y="124" width="168" height="22" rx="11" fill="#3DF0FF"/>
+<path fill="#3DF0FF" d="M112 48H144V104L128 92L112 104Z"/>
+<ellipse cx="128" cy="116" rx="118" ry="38" fill="none" stroke="#3DF0FF" stroke-opacity=".5" stroke-width="3" transform="rotate(-18 128 116)"/></svg>
