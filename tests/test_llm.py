@@ -11,7 +11,7 @@ from kora.db import CONCLUIDO, Queue
 from kora.extractors.meta import Meta
 from kora.llm import build_provider
 from kora.llm.anthropic_provider import AnthropicProvider
-from kora.llm.base import Provider, ProviderError
+from kora.llm.base import ProviderError
 from kora.llm.deepseek import DeepSeekProvider
 from kora.llm.ollama import OllamaProvider
 from kora.llm.prompt import system_prompt, user_prompt

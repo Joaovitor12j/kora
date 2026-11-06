@@ -1,13 +1,16 @@
-<p align="center"><img src="docs/img/kora.png" width="200" alt="Kora: androide cyberpunk com visor ciano e um marcador de livro luminoso na testa"></p>
-
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="marca/palavra-cor.svg">
-    <img src="marca/palavra-tinta.svg" height="44" alt="Kora">
+    <img src="marca/palavra-tinta.svg" height="64" alt="Kora">
   </picture>
 </h1>
 
 <p align="center"><em>Kora</em> = "salvar" em Akan.</p>
+
+<p align="center">
+  <img alt="Python 3.12+" src="https://img.shields.io/badge/python-3.12%2B-3776ab">
+  <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-green">
+</p>
 
 Kora é um bot do Telegram que transforma links soltos em notas organizadas no seu vault do Obsidian.
 Você manda o link de um Reel, TikTok, tweet, vídeo ou artigo; a Kora baixa o que for preciso, transcreve o
@@ -26,6 +29,9 @@ assistentes de IA consultarem).
 - [Desenvolvimento](#desenvolvimento)
 - [Limitações conhecidas](#limitações-conhecidas)
 - [Próximos passos](#próximos-passos)
+- [Identidade visual](#identidade-visual)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
 
 ## Como funciona
 
@@ -74,8 +80,8 @@ fala gera nota sem a seção de transcrição, e isso é esperado.
 criado: 2026-10-17
 tipo: link
 plataforma: instagram
-url: "https://www.instagram.com/reel/DeiT3aSAmvG/"
-autor: "Pedro Augusto"
+url: "https://www.instagram.com/reel/EXEMPLO/"
+autor: "Fulano de Tal"
 publicado: 2026-10-16
 categoria: IA
 tags: [claude, plugins, produtividade]
@@ -83,14 +89,14 @@ status: processado
 ia: "ollama/gemma4"
 ---
 
-# 10 Plugins Essenciais para Multiplicar o Trabalho com Claude Code
+# Título gerado pela IA
 
 ## Resumo
 Texto de 3 a 5 linhas.
 
 ## Pontos-chave
-- Task Observer: aprende seu estilo de trabalho.
-- Security Sweep: identifica vulnerabilidades no código.
+- Primeiro ponto.
+- Segundo ponto.
 
 ## Legenda original
 Legenda do post, como foi publicada.
@@ -127,9 +133,6 @@ vai para `IA` com a tag `github`. A lista de fábrica fica em `src/kora/taxonomi
 
 ### Comandos e gestos no Telegram
 
-<p align="center"><img src="docs/img/telegram.svg" width="430" alt="Conversa com a Kora: link enviado, aviso de salvo e o comando /status"></p>
-<p align="center"><sub>Ilustração montada com respostas reais do bot.</sub></p>
-
 | O que fazer | Para que serve |
 |---|---|
 | Enviar um ou mais links | Entram na fila. O bot responde `na fila: …`, ou `já salvo: …` se já existir |
@@ -164,8 +167,8 @@ vai para `IA` com a tag `github`. A lista de fábrica fica em `src/kora/taxonomi
 - **Índice `Referencias/Salvos/Salvos.md`:** criado uma única vez pelo worker, com consultas Dataview:
   recentes, por categoria, por plataforma, por tag, por mês e pendentes de IA. Pode ser editado à vontade; a
   Kora nunca o sobrescreve.
-- **`CLAUDE.md` do vault:** tem uma seção "Links salvos (Kora)" que ensina assistentes de IA a achar e citar as
-  notas (filtrar pelo frontmatter, depois buscar o texto, e citar o `url`).
+- **Instrução para assistentes:** você pode ensinar seu assistente de IA a procurar em `Referencias/Salvos/` pelo
+  frontmatter e pelo texto, e a citar o `url` da nota.
 
 ## Instalação e configuração
 
@@ -234,6 +237,9 @@ provedores; veja o item 1 de [Próximos passos](#próximos-passos).
 uv run kora-web        # ou, com o deploy/install.sh, já fica ligada: http://127.0.0.1:8765
 ```
 
+<p align="center"><img src="docs/img/ui-salvos.png" width="860" alt="Aba Salvos: busca, categorias com sigilos, filtros e links agrupados por dia"></p>
+<p align="center"><sub>Aba Salvos, com dados fictícios.</sub></p>
+
 Três abas. O vault continua sendo a fonte da verdade: a galeria só lê as notas e, quando você corrige uma
 categoria, move o arquivo como o bot já faz.
 
@@ -248,6 +254,8 @@ categoria, move o arquivo como o bot já faz.
   comentários e a permissão do arquivo), grava `data/categorias.json`, grava o intervalo em
   `~/.config/systemd/user/kora-worker.timer.d/intervalo.conf` e reinicia o bot. O worker roda em lote e lê tudo
   no próximo.
+
+<p align="center"><img src="docs/img/ui-ajustes.png" width="860" alt="Aba Ajustes: provedor de IA, lotes e limites"></p>
 
 **Segurança.** Só escuta em `127.0.0.1`. Toda requisição confere o `Host` (contra DNS rebinding) e toda escrita
 exige JSON e `Origin` local, então uma página aberta no navegador não consegue acionar o painel. As chaves de API
@@ -268,7 +276,7 @@ HTTPS. O computador da Kora precisa estar ligado.
    ```
 
    O comando mostra o endereço, algo como `https://meu-pc.rede.ts.net:10000`. O `--https=10000` evita a porta 443
-   (padrão do Tailscale Serve), que costuma já estar em uso (aqui, a 443 e a 8443 são de containers); troque por outra porta livre se precisar (o Tailscale
+   (padrão do Tailscale Serve), que costuma já estar em uso; troque por outra porta livre se precisar (o Tailscale
    aceita só 443, 8443 e 10000). O `WEB_HOSTS` leva só o nome do host, sem a porta.
 2. Diga à Kora quem pode entrar, em Ajustes, na seção "Acesso de fora" (ou no `.env`):
 
@@ -306,7 +314,7 @@ O bot passa a ficar sempre ligado e o worker roda em lotes (1 h após ligar o co
 cada lote; só conta o tempo com a máquina ligada).
 
 ![Linha do tempo: bot sempre ligado, fila acumulando links e lotes 1 h após ligar e a cada 8 h](docs/img/lotes.svg)
- O aviso "salvo em …" de cada link chega quando o lote o
+O aviso "salvo em …" de cada link chega quando o lote o
 processa, então pode demorar até 8 h; use `/processar` para não esperar.
 
 ```bash
@@ -346,8 +354,7 @@ src/kora/
 ├── web/               # interface web: app.py (rotas), acervo.py (galeria), ajustes.py, templates/, static/
 └── config.py, logs.py, telegram_api.py
 deploy/                # units do systemd e scripts de instalação
-docs/PLANO.md          # plano, decisões e resultados da validação técnica
-spike/                 # scripts da Fase 0 (testar links e medir o Whisper)
+marca/                 # identidade visual: logos, ícones e guia (marca/README.md)
 tests/                 # testes automatizados
 ```
 
@@ -358,8 +365,7 @@ uv sync
 uv run pytest          # a suíte inteira roda em poucos segundos, sem rede
 ```
 
-Os testes não chamam a rede nem o systemd real: provedores de IA, Telegram e `systemctl` são simulados. As
-decisões e o histórico das fases estão em [docs/PLANO.md](docs/PLANO.md).
+Os testes não chamam a rede nem o systemd real: provedores de IA, Telegram e `systemctl` são simulados.
 
 ## Limitações conhecidas
 
@@ -370,73 +376,50 @@ decisões e o histórico das fases estão em [docs/PLANO.md](docs/PLANO.md).
 - **TikTok em carrossel (`/photo/`):** nenhum extrator funciona, então o link é salvo só com a URL e falha.
 - **YouTube:** pode exigir login por causa do anti-bot, e a Kora ainda não usa cookies.
 - **Instagram e TikTok mudam:** o `yt-dlp` quebra de tempos em tempos; por isso a atualização diária.
-- **Categoria com modelo local pequeno:** o `gemma4` às vezes erra (por exemplo, um tweet de repositórios de
-  IA caiu em `programação`). Corrija respondendo `categoria: X`.
+- **Modelos locais pequenos** podem errar a categoria. Corrija respondendo `categoria: X`.
 - **Um provedor de IA por vez, sem fallback.**
 - **Busca simples:** varre os arquivos do vault (todos os termos, sem acento). Basta até algumas centenas de
   notas; depois disso, embeddings.
 
 ## Próximos passos
 
-Nada abaixo está implementado ainda. A interface configurável e a galeria dos links salvos já saíram (veja [Interface web](#interface-web)).
+Orquestrador de IA com fallback entre provedores, bot no WhatsApp, tradução para o idioma escolhido, notas de
+receita estruturadas e busca por embeddings. Detalhes em [docs/ROADMAP.md](docs/ROADMAP.md).
 
-### 1. Orquestrador de IA com fallback
-Hoje cada provedor funciona sozinho e, se ele falhar, a nota fica pendente. O orquestrador tentaria vários em
-ordem configurável (por exemplo Anthropic, depois DeepSeek, depois Ollama), passando ao próximo quando houver
-erro, limite de uso ou JSON inválido, e registraria quem respondeu (o campo `ia` da nota já existe). A interface
-`Provider.complete()` já foi pensada para isso: o orquestrador entra por cima, sem mexer nos provedores.
-*Decisões em aberto:* ordem fixa ou por custo/latência; limite de gasto; rotear por tipo de conteúdo.
+## Identidade visual
 
-### 2. Bot no WhatsApp
-Um segundo canal de entrada, com o mesmo fluxo e os mesmos comandos. Para isso, o que hoje está acoplado ao
-Telegram (`bot.py`, `telegram_api.py`) viraria uma interface de "canal" (receber link, responder, tratar
-comandos), com um adaptador por plataforma.
-*Decisões em aberto:* a API oficial (WhatsApp Business Cloud API) exige conta Meta, webhook público e modelos de
-mensagem; as bibliotecas não oficiais são mais simples, mas arriscam bloqueio do número.
+<p align="center"><img src="marca/simbolo-cor.svg" height="120" alt="Símbolo da Kora: o k formado por uma haste de marcador de página ciano e um chevron magenta"></p>
 
-### 3. Tradução para o idioma escolhido
-Conteúdo em outros idiomas seria traduzido para o idioma que você selecionar (`pt-BR` por padrão). Hoje o
-resumo e os pontos-chave já saem em português por instrução do prompt, mas o idioma é fixo e a transcrição, o
-artigo e a legenda ficam no original. A ideia: idioma-alvo configurável, detectar o idioma de origem (o Whisper
-já detecta o do áudio), traduzir título, resumo e pontos-chave e, opcionalmente, o conteúdo completo numa seção
-"Tradução", sempre guardando o original.
-*Decisões em aberto:* traduzir tudo ou só o resumo; qual provedor traduz (custo de textos longos).
+O **k** é um marcador de página: a haste (ciano, com o entalhe em V) é o marcador, e o braço e a perna formam um
+chevron magenta, o mesmo traço dos padrões geométricos de inspiração Akan do avatar. Salvar, o nome e a origem num
+desenho só. A interface segue a marca: fundo Noite, cor só em destaque (ciano = ativo, magenta = pendente ou
+alerta), sem brilho em botões e cartões, títulos em Bricolage Grotesque e texto em Instrument Sans, e um sigilo
+próprio por categoria, desenhado com o vocabulário do k.
 
-### 4. Receita em vídeo vira nota de receita
-Quando o link for um vídeo de receita (categoria `receitas`, ou detecção própria), o Kora deixaria de gerar o
-resumo genérico e geraria uma **nota de receita** completa: ingredientes com quantidades, modo de preparo
-passo a passo, tempo e rendimento, e anotações tiradas do vídeo (dicas, substituições, erros a evitar, tempos e
-temperaturas ditos de passagem). É um fluxo à parte, com formato e prompt próprios.
+| Noite | Ciano | Magenta | Névoa | Tinta |
+|---|---|---|---|---|
+| `#070A1C` | `#3DF0FF` | `#F046B4` | `#E7ECFF` | `#15130F` |
 
-Plano, em etapas pequenas:
-1. **Detectar.** Depois da classificação, se a categoria for `receitas` (ou um classificador barato disser que é
-   receita), a nota segue o fluxo de receita. Sem receita no conteúdo (só vídeo de "olha que prato lindo"), cai
-   no fluxo normal.
-2. **Extrair estruturado.** Novo prompt e schema em `llm/` (`prompt_receita`, `schema_receita`): `titulo`,
-   `rendimento`, `tempo_preparo`, `ingredientes` (lista de `{item, quantidade, observacao}`, agrupados por
-   parte da receita quando houver, como "massa" e "recheio"), `passos` (ordenados), `anotacoes` e
-   `incerto` (o que o vídeo não deixou claro). Regra firme no prompt: não inventar quantidade; o que não foi
-   dito vai para `incerto`.
-3. **Fontes além da fala.** Muita receita mostra as medidas só na legenda ou na tela. Ordem de confiança: legenda
-   do post (muitos criadores colam a receita aí), transcrição do áudio, e por último quadros do vídeo.
-   Começar só com legenda + transcrição, que já existem no pipeline; ler texto na tela (OCR ou modelo com
-   visão sobre quadros extraídos com `ffmpeg`) fica como etapa opcional depois.
-4. **Renderizar.** `vault.render` ganha um ramo para `tipo: receita`, com frontmatter extra (`rendimento`,
-   `tempo`, `ingredientes_principais`) e seções: Ingredientes (checklist `- [ ]`), Modo de preparo (lista
-   numerada), Anotações, Incerto, e a transcrição recolhida no fim. `ler_nota` e a reclassificação precisam
-   continuar entendendo o formato.
-5. **Interface.** Cartão de receita na galeria e na página da nota (ingredientes e passos em destaque), busca
-   por ingrediente, e no Telegram a resposta mostra título, tempo e quantidade de ingredientes.
-6. **Testes.** Fixtures de transcrições reais de receita (com e sem medidas) validando o schema, a renderização
-   e o caso "não é receita".
+Logos, ícones, PNGs e o guia de uso (área de proteção, o que não fazer, como regerar) estão em [`marca/`](marca/README.md).
 
-*Decisões em aberto:* modelo local pequeno costuma errar quantidades, então talvez exigir um provedor maior
-para esse fluxo; o que fazer com receita sem medidas (anotar "a gosto" ou marcar como incompleta);
-vídeo em outro idioma (cruza com o item 3, a tradução); lista de compras gerada a partir de várias receitas;
-OCR de quadros vale o custo.
+## Contribuindo
 
-### Menores, sem prazo
-- Cookies para o YouTube e outros sites que exigem login.
-- Suporte ao carrossel `/photo/` do TikTok.
-- Embeddings locais (`sqlite-vec`) e um servidor MCP com `buscar_salvos(pergunta)`, quando o volume passar de
-  algumas centenas de notas.
+Issues e PRs são bem-vindos. Antes de abrir um PR, rode `uv run pytest`. Nunca inclua tokens, chaves, cookies ou
+arquivos de configuração e dados locais em issues, logs ou commits.
+
+## Licença
+
+[MIT](LICENSE). O logo, o avatar e os arquivos em `marca/` e `docs/img/` fazem parte da identidade da Kora e
+acompanham a mesma licença, mas não devem ser usados para sugerir endosso de terceiros.
+
+---
+
+<p align="center">
+  <a href="https://joaovitorsantos.com.br">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/img/jovitor-cor.svg">
+      <img src="docs/img/jovitor-tinta.svg" height="36" alt="Jovitor">
+    </picture>
+  </a>
+</p>
+<p align="center"><sub>Um produto <strong>Jovitor</strong>, por <a href="https://github.com/Joaovitor12j">João Vitor Santos</a>.</sub></p>

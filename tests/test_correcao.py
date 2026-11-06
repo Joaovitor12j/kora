@@ -163,7 +163,7 @@ def test_reclassify_moves_pending_notes_and_keeps_creation_date(s, q):
 
 
 def test_reclassify_keeps_manual_category(s, q):
-    nota = mover_categoria(s, write_note(s.inbox_dir, pendente(), 1), "humor")
+    mover_categoria(s, write_note(s.inbox_dir, pendente(), 1), "humor")
     assert reclassificar(s, q, Fake("a", json.dumps(BOM))) == (1, 0)  # IA diria "design"
     assert [p.parent.name for p in s.saved_dir.rglob("*.md")] == ["humor"]
 

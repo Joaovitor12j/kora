@@ -29,7 +29,7 @@ def palavra(c1, c2, ct, gap=26):
     p, x = r(x, ct); partes.append(p); x += gap - 6
     p, x = a(x, ct); partes.append(p)
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -12 {x+24:.0f} {H+24}"><title>kora</title>{"".join(partes)}</svg>'
-for nome, cs in {"palavra-cor": (CY, MG, TX), "palavra-tinta": (INK, INK, INK), "palavra-branca": ("#fff",) * 3}.items():
+for nome, cs in {"palavra-cor": (CY, MG, TX), "palavra-tinta": (INK, INK, INK), "palavra-branca": ("#fff",) * 3, "palavra-papel": (INK, MG, INK)}.items():
     open(f"{nome}.svg", "w").write(palavra(*cs))
 
 # ---- símbolo (k) e ícones ----

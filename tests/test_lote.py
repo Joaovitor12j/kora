@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kora import agenda, bot, status, worker
+from kora import agenda, bot, worker
 from kora.agenda import Agenda, iniciar_lote, ler_execucao, parse_proxima, registrar_execucao
 from kora.config import Settings
 from kora.db import CONCLUIDO, FALHOU, NA_FILA, Queue
