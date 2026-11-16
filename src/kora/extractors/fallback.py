@@ -71,8 +71,7 @@ def parse_fxtwitter(data: dict) -> dict:
     }
 
 
-def x(url: str) -> dict:
-    """Tweet só de texto (o yt-dlp exige vídeo). API pública do FixTweet."""
+def _fx_json(url: str) -> dict:
     usuario, _, status_id = urlsplit(url).path.strip("/").partition("/status/")
     status_id = status_id.split("/")[0]
     if not (usuario and status_id):
@@ -81,8 +80,21 @@ def x(url: str) -> dict:
     r = httpx.get(f"https://api.fxtwitter.com/{usuario}/status/{status_id}", timeout=20,
                   headers={"User-Agent": "kora/0.1"}, follow_redirects=True)
     r.raise_for_status()
-    data = r.json()
-    return parse_fxtwitter(data)
+    return r.json()
+
+
+def x(url: str) -> dict:
+    """Tweet só de texto (o yt-dlp exige vídeo). API pública do FixTweet."""
+    return parse_fxtwitter(_fx_json(url))
+
+
+def parse_fx_fotos(data: dict) -> list[str]:
+    fotos = (data.get("tweet", {}).get("media") or {}).get("photos") or []
+    return [f["url"] for f in fotos if f.get("url")]
+
+
+def x_fotos(url: str) -> list[str]:
+    return parse_fx_fotos(_fx_json(url))
 
 
 def extract(url: str, plataforma: str) -> dict:

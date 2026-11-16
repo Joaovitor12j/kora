@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     whisper_model: str = "small"
     whisper_language: str = ""  # vazio = detectar o idioma
     max_audio_minutes: int = 30
+    # Posts de foto e carrosséis (Instagram, TikTok, X): OCR local; modelo de visão só se ligado.
+    imagens_ler: bool = True
+    imagens_max: int = 10
+    imagens_cookies: str = ""  # cookies.txt do Instagram (carrossel completo exige login)
+    imagens_visao: bool = False  # manda as imagens ao modelo quando o OCR acha pouco texto
     # Interface web fora desta máquina (Tailscale Serve): hosts aceitos além do local e e-mails
     # autorizados a entrar por eles. Vazio = só acesso local.
     web_hosts: str = ""

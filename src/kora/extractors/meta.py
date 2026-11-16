@@ -13,7 +13,7 @@ class Meta:
     descricao: str = ""
     publicado: str = ""  # AAAA-MM-DD
     conteudo: str = ""  # texto do artigo, legenda do site ou transcrição
-    conteudo_tipo: str = ""  # artigo | legenda | transcricao
+    conteudo_tipo: str = ""  # artigo | legenda | transcricao | imagens
     tem_midia: bool = False
     duracao: float = 0.0
     legendas: dict = field(default_factory=dict)
@@ -23,6 +23,7 @@ class Meta:
     categoria: str = ""
     tags: list[str] = field(default_factory=list)
     ia: str = ""  # provedor/modelo que classificou
+    imagens_visao: list[bytes] = field(default_factory=list, repr=False)  # JPEGs reduzidos, só em memória
     criado: str = ""  # AAAA-MM-DD da nota original, preservado ao reprocessar
 
 

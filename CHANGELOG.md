@@ -14,6 +14,9 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
 
 ### Adicionado
 
+- Posts de foto e carrosséis (Instagram, TikTok `/photo/`, X): a Kora baixa as imagens, lê o texto com OCR
+  local (RapidOCR) e o usa no resumo; as imagens são descartadas. Modelo de visão opcional
+  (`IMAGENS_VISAO`) para imagens sem texto; cookies do Instagram opcionais (`IMAGENS_COOKIES`).
 - Conferência do agendamento: ao salvar o intervalo, a interface confere no systemd se os dois gatilhos
   existem e acusa o defeito; o `/status` do bot avisa "Agendamento quebrado" em vez de só "indisponível".
 
