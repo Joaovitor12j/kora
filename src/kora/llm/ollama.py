@@ -1,3 +1,5 @@
+import base64
+
 import httpx
 
 from .base import Provider, ProviderError
@@ -7,18 +9,22 @@ NUM_CTX = 8192  # o padrão do Ollama (4096) cortaria o prompt em silêncio
 
 class OllamaProvider(Provider):
     name = "ollama"
+    suporta_visao = True  # só funciona com modelo de visão (qwen2.5vl, gemma3…)
 
     def __init__(self, model: str, base_url: str, timeout: float, client: httpx.Client | None = None):
         self.model = model
         self.base_url = base_url.rstrip("/")
         self._client = client or httpx.Client(timeout=timeout)
 
-    def complete(self, system: str, user: str, schema: dict) -> str:
+    def complete(self, system: str, user: str, schema: dict, imagens: list[bytes] | None = None) -> str:
+        msg = {"role": "user", "content": user}
+        if imagens:
+            msg["images"] = [base64.b64encode(i).decode() for i in imagens]
         r = self._client.post(
             f"{self.base_url}/api/chat",
             json={
                 "model": self.model,
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "messages": [{"role": "system", "content": system}, msg],
                 "stream": False,
                 "format": schema,
                 "think": False,

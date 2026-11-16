@@ -15,7 +15,7 @@ class DeepSeekProvider(Provider):
         self._headers = {"Authorization": f"Bearer {api_key}"}
         self._client = client or httpx.Client(timeout=timeout)
 
-    def complete(self, system: str, user: str, schema: dict) -> str:
+    def complete(self, system: str, user: str, schema: dict, imagens: list[bytes] | None = None) -> str:
         r = self._client.post(
             f"{self.base_url}/chat/completions",
             headers=self._headers,

@@ -12,7 +12,7 @@ from .extractors.meta import Meta, fetch_meta
 from .indice import garantir_indice
 from .logs import configurar
 from .llm import Provider, build_provider
-from .media import attach_transcript
+from .media import attach_imagens, attach_transcript
 from .telegram_api import send_message
 from .vault import destino, tags_existentes, write_note
 
@@ -25,6 +25,7 @@ def process(queue: Queue, settings: Settings, item: Item, provider: Provider | N
     """Extrai, classifica e grava a nota. Sem IA, ela fica em _inbox com status pendente."""
     meta = fetch_meta(item.url_canonica, item.plataforma)
     attach_transcript(meta, settings)
+    attach_imagens(meta, settings)
     classificar(meta, provider, settings, tags_existentes(settings.saved_dir))
     path = write_note(destino(settings, meta), meta, item.id)
     queue.done(item.id, meta.titulo, str(path))

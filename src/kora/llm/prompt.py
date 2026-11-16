@@ -47,7 +47,10 @@ def user_prompt(meta: Meta, max_chars: int) -> str:
         f"Legenda/texto do post:\n{_cortar(meta.descricao, max_chars // 4)}",
     ]
     if meta.conteudo:
-        rotulo = {"artigo": "Texto do artigo", "legenda": "Legenda do vídeo"}.get(
+        rotulo = {"artigo": "Texto do artigo", "legenda": "Legenda do vídeo",
+                  "imagens": "Texto lido das imagens do post (OCR, um bloco por slide)"}.get(
             meta.conteudo_tipo, "Transcrição do áudio")
         partes.append(f"{rotulo}:\n{_cortar(meta.conteudo, max_chars)}")
+    if meta.imagens_visao:
+        partes.append("As imagens do post seguem anexas; descreva o que elas mostram no resumo.")
     return "<conteudo>\n" + "\n\n".join(partes) + "\n</conteudo>\n\nResponda apenas com o JSON."

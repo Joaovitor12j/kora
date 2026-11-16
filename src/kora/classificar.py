@@ -13,9 +13,10 @@ def classificar(meta: Meta, provider: Provider | None, settings: Settings, tags_
     """Preenche título, resumo, categoria e tags. Sem IA ou com falha, a nota fica pendente."""
     if provider is None:
         return False
+    extra = {"imagens": meta.imagens_visao} if meta.imagens_visao and provider.suporta_visao else {}
     try:
         c = parse(provider.complete(
-            system_prompt(tags_existentes), user_prompt(meta, settings.llm_max_chars), SCHEMA))
+            system_prompt(tags_existentes), user_prompt(meta, settings.llm_max_chars), SCHEMA, **extra))
     except Exception as e:
         log.warning("IA %s falhou para %s: %s: %s", provider.label, meta.url, type(e).__name__, e)
         return False

@@ -64,9 +64,10 @@ O vault é a fonte da verdade: nada importante fica só no banco. A fila SQLite 
 | Origem | Metadados | Conteúdo | Observações |
 |---|---|---|---|
 | **Instagram Reels** | autor, legenda, data | transcrição do áudio | funciona sem login |
-| **Instagram post de foto** | autor, legenda | só a legenda | lida pelas tags públicas da página |
+| **Instagram post de foto e carrossel** | autor, legenda | texto lido das imagens (OCR) | sem login só o primeiro slide; para o carrossel inteiro aponte `IMAGENS_COOKIES` |
+| **TikTok (carrossel `/photo/`)** | autor, legenda | texto lido das imagens (OCR) | imagens baixadas com `gallery-dl` |
 | **TikTok (vídeo)** | autor, legenda | transcrição do áudio | exige o `curl_cffi` (já incluído): o TikTok bloqueia clientes sem impersonação |
-| **X / Twitter** | autor, data, **texto completo** | transcrição do vídeo, se houver | o `yt-dlp` corta tweets longos; o texto inteiro vem da API pública FixTweet |
+| **X / Twitter** | autor, data, **texto completo** | transcrição do vídeo ou texto lido das fotos (OCR) | o `yt-dlp` corta tweets longos; o texto inteiro vem da API pública FixTweet |
 | **Artigos e páginas** | título, autor, data | texto do artigo | extraído com `trafilatura`; sem texto suficiente, cai para o título e a descrição |
 | **YouTube** | título, canal, descrição | legenda do site ou transcrição | o YouTube pode pedir login (anti-bot) e a Kora ainda não usa cookies; veja [limitações](#limitações-conhecidas) |
 
@@ -211,6 +212,10 @@ só para o índice `Salvos.md`.
 | `WHISPER_MODEL` | `small` | Modelo do `faster-whisper` (CPU, `int8`) |
 | `WHISPER_LANGUAGE` | vazio | Vazio detecta o idioma; ou `pt`, `en`… |
 | `MAX_AUDIO_MINUTES` | `30` | Acima disso, só a legenda |
+| `IMAGENS_LER` | `true` | Lê o texto das imagens de posts de foto e carrosséis (OCR local, imagens descartadas depois) |
+| `IMAGENS_MAX` | `10` | Máximo de imagens lidas por post |
+| `IMAGENS_COOKIES` | vazio | Caminho de um `cookies.txt` do Instagram (carrossel completo exige login) |
+| `IMAGENS_VISAO` | `false` | Se o OCR achar pouco texto, manda até 4 imagens ao modelo (Anthropic ou Ollama com modelo de visão) |
 
 O `.env` está no `.gitignore`, assim como `data/` e arquivos `cookies*.txt`. Segredos nunca vão para o vault nem
 para o repositório.
@@ -373,7 +378,7 @@ Os testes não chamam a rede nem o systemd real: provedores de IA, Telegram e `s
   tempo, os links enviados nesse intervalo se perdem. A fila local não tem esse limite, porque o bot a alimenta
   na hora.
 - **Atraso dos lotes:** a nota e o aviso chegam quando o lote roda (até 8 h). `/processar` resolve na hora.
-- **TikTok em carrossel (`/photo/`):** nenhum extrator funciona, então o link é salvo só com a URL e falha.
+- **Carrosséis:** o OCR só lê texto; imagem sem texto exige `IMAGENS_VISAO`. O Instagram só entrega o carrossel completo com cookies de login.
 - **YouTube:** pode exigir login por causa do anti-bot, e a Kora ainda não usa cookies.
 - **Instagram e TikTok mudam:** o `yt-dlp` quebra de tempos em tempos; por isso a atualização diária.
 - **Modelos locais pequenos** podem errar a categoria. Corrija respondendo `categoria: X`.
