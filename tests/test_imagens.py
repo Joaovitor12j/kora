@@ -70,3 +70,13 @@ def test_falha_nao_derruba(settings, monkeypatch):
     meta = Meta(url="u", plataforma="instagram", titulo="t")
     media.attach_imagens(meta, settings)
     assert meta.conteudo == ""
+
+
+def test_nota_com_texto_das_imagens_vai_e_volta(tmp_path):
+    from kora.vault import ler_nota, write_note
+    meta = Meta(url="https://instagram.com/p/x", plataforma="instagram", titulo="T", conteudo="[slide 1]\nolá\n\n[slide 2]\nmundo",
+                conteudo_tipo="imagens")
+    nota = write_note(tmp_path, meta, 1)
+    assert "## Texto das imagens" in nota.read_text(encoding="utf-8")
+    lido, _ = ler_nota(nota)
+    assert lido.conteudo_tipo == "imagens" and "[slide 2]" in lido.conteudo

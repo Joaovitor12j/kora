@@ -30,6 +30,8 @@ def _conteudo(meta: Meta) -> list[str]:
     if meta.conteudo_tipo == "artigo":
         return ["## Conteúdo", meta.conteudo, ""]
     corpo = [f"> {linha}" for linha in meta.conteudo.splitlines() if linha.strip()]
+    if meta.conteudo_tipo == "imagens":
+        return ["## Texto das imagens", "> [!note]- Texto lido das imagens (OCR)", *corpo, ""]
     titulo = "Transcrição completa" if meta.conteudo_tipo == "transcricao" else "Legenda do vídeo"
     return ["## Transcrição", f"> [!note]- {titulo}", *corpo, ""]
 
@@ -149,6 +151,10 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
     if "Conteúdo" in secoes:
         meta.conteudo, meta.conteudo_tipo = secoes["Conteúdo"], "artigo"
+    elif "Texto das imagens" in secoes:
+        linhas = secoes["Texto das imagens"].splitlines()
+        meta.conteudo_tipo = "imagens"
+        meta.conteudo = "\n".join(l[2:] if l.startswith("> ") else l for l in linhas[1:] if l.strip())
     elif "Transcrição" in secoes:
         linhas = secoes["Transcrição"].splitlines()
         meta.conteudo_tipo = "transcricao" if "Transcrição completa" in linhas[0] else "legenda"

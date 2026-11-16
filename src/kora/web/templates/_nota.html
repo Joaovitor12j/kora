@@ -35,7 +35,7 @@
   <details><summary>Legenda original</summary><p class="corrido texto-longo">{{ m.descricao }}</p></details>
   {% endif %}
   {% if m.conteudo %}
-  <details><summary>{{ {"artigo": "Conteúdo do artigo", "transcricao": "Transcrição do áudio"}.get(m.conteudo_tipo, "Legenda do vídeo") }}</summary><p class="corrido texto-longo">{{ m.conteudo }}</p></details>
+  <details><summary>{{ {"artigo": "Conteúdo do artigo", "transcricao": "Transcrição do áudio", "imagens": "Texto das imagens (OCR)"}.get(m.conteudo_tipo, "Legenda do vídeo") }}</summary><p class="corrido texto-longo">{{ m.conteudo }}</p></details>
   {% endif %}
 
   <footer class="nota-rodape">
