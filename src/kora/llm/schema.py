@@ -3,6 +3,7 @@ import re
 
 from pydantic import BaseModel, field_validator
 
+from ..tags import normalizar_tag
 from ..taxonomia import CATEGORIAS, normalizar_categoria
 
 MAX_TAGS = 6
@@ -21,10 +22,6 @@ SCHEMA = {
     "required": ["titulo", "resumo", "pontos_chave", "categoria", "tags"],
     "additionalProperties": False,
 }
-
-
-def _tag(raw: str) -> str:
-    return re.sub(r"[^\w-]", "", re.sub(r"\s+", "-", raw.strip().lstrip("#").lower())).strip("-_")
 
 
 class Classificacao(BaseModel):
@@ -55,7 +52,7 @@ class Classificacao(BaseModel):
     @field_validator("tags")
     @classmethod
     def _tags(cls, v: list[str]) -> list[str]:
-        return list(dict.fromkeys(t for t in map(_tag, v) if t))[:MAX_TAGS]
+        return list(dict.fromkeys(t for t in map(normalizar_tag, v) if t))[:MAX_TAGS]
 
 
 _CERCA = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)

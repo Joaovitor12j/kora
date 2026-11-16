@@ -31,7 +31,8 @@ dev = ["pytest>=8"]
 kora-bot = "kora.bot:main"
 kora-worker = "kora.worker:main"
 kora-reclassify = "kora.reclassificar:main"
-kora-web = "kora.web.app:main"
+kora-tags = "kora.tags:main"
+kora-web ="kora.web.app:main"
 
 [build-system]
 requires = ["hatchling"]

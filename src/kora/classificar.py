@@ -5,6 +5,7 @@ from .extractors.meta import Meta
 from .llm import Provider
 from .llm.prompt import system_prompt, user_prompt
 from .llm.schema import SCHEMA, parse
+from .tags import normalizar_tags
 
 log = logging.getLogger("kora.classificar")
 
@@ -21,5 +22,6 @@ def classificar(meta: Meta, provider: Provider | None, settings: Settings, tags_
         log.warning("IA %s falhou para %s: %s: %s", provider.label, meta.url, type(e).__name__, e)
         return False
     meta.titulo, meta.resumo, meta.pontos_chave = c.titulo, c.resumo, c.pontos_chave
-    meta.categoria, meta.tags, meta.ia = c.categoria, c.tags, provider.label
+    meta.categoria, meta.ia = c.categoria, provider.label
+    meta.tags = normalizar_tags(c.tags, c.categoria, meta.plataforma)
     return True
