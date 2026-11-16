@@ -22,6 +22,6 @@ def classificar(meta: Meta, provider: Provider | None, settings: Settings, tags_
         log.warning("IA %s falhou para %s: %s: %s", provider.label, meta.url, type(e).__name__, e)
         return False
     meta.titulo, meta.resumo, meta.pontos_chave = c.titulo, c.resumo, c.pontos_chave
-    meta.categoria, meta.ia = c.categoria, provider.label
+    meta.categoria, meta.assunto, meta.ia = c.categoria, c.assunto, provider.label
     meta.tags = normalizar_tags(c.tags, c.categoria, meta.plataforma)
     return True

@@ -54,6 +54,36 @@ REGRA_DESEMPATE = (
 )
 
 
+# Subdivisão opcional de categorias grandes: categoria -> {assunto: o que entra}. Vai no campo `assunto:`
+# da nota (a pasta continua sendo só a categoria). Categoria que não está aqui não tem assunto.
+ASSUNTOS: dict[str, dict[str, str]] = {
+    "design": {
+        "motion": "animação, motion graphics, efeitos, easing",
+        "video": "edição e produção de vídeo, vídeos de lançamento",
+        "ui-ux": "interfaces, fluxos, navegação, leis e psicologia de UX",
+        "identidade": "logo, marca, paleta de cores, tipografia, fontes",
+        "web": "sites e landing pages, layouts, backgrounds",
+        "3d": "assets 3D, ThreeJS, ilustração 3D",
+        "inspiracao": "coleções de referências e sites para se inspirar",
+    },
+    "negócios": {
+        "conteudo": "roteiro, gancho, viralização, algoritmo, crescimento nas redes",
+        "marketing": "SEO, anúncios, vendas, prospecção de clientes",
+        "carreira": "carreira, freelas, precificação, produto, validação de ideias",
+    },
+}
+
+
+def assuntos_de(categoria: str) -> dict[str, str]:
+    return ASSUNTOS.get(categoria, {})
+
+
+def normalizar_assunto(categoria: str, valor: str) -> str:
+    """O assunto só vale se pertencer à categoria; senão fica vazio."""
+    achado = {a.lower(): a for a in assuntos_de(categoria)}.get(valor.strip().lower())
+    return achado or ""
+
+
 def normalizar_categoria(valor: str) -> str:
     achada = {c.lower(): c for c in CATEGORIAS}.get(valor.strip().lower())
     return achada or FALLBACK

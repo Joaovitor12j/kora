@@ -1,10 +1,10 @@
 import json
 import re
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from ..tags import normalizar_tag
-from ..taxonomia import CATEGORIAS, normalizar_categoria
+from ..taxonomia import CATEGORIAS, normalizar_assunto, normalizar_categoria
 
 MAX_TAGS = 6
 MAX_PONTOS = 8
@@ -17,6 +17,7 @@ SCHEMA = {
         "resumo": {"type": "string"},
         "pontos_chave": {"type": "array", "items": {"type": "string"}},
         "categoria": {"type": "string", "enum": list(CATEGORIAS)},
+        "assunto": {"type": "string"},
         "tags": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["titulo", "resumo", "pontos_chave", "categoria", "tags"],
@@ -29,6 +30,7 @@ class Classificacao(BaseModel):
     resumo: str
     pontos_chave: list[str]
     categoria: str
+    assunto: str = ""
     tags: list[str]
 
     @field_validator("titulo", "resumo")
@@ -53,6 +55,12 @@ class Classificacao(BaseModel):
     @classmethod
     def _tags(cls, v: list[str]) -> list[str]:
         return list(dict.fromkeys(t for t in map(normalizar_tag, v) if t))[:MAX_TAGS]
+
+
+    @model_validator(mode="after")
+    def _assunto(self):
+        self.assunto = normalizar_assunto(self.categoria, self.assunto)  # assunto de outra categoria some
+        return self
 
 
 _CERCA = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
