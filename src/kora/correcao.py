@@ -4,7 +4,7 @@ from pathlib import Path
 from .config import Settings
 from .db import Item, Queue
 from .taxonomia import CATEGORIAS
-from .vault import mover_categoria
+from .vault import achar_nota, mover_categoria
 
 PADRAO = re.compile(r"^\s*categoria\s*:\s*(.+?)\s*$", re.IGNORECASE)
 
@@ -34,9 +34,9 @@ def corrigir_categoria(queue: Queue, settings: Settings, chat_id: int, respondid
     item = _item(queue, chat_id, respondida)
     if isinstance(item, str):
         return item
-    if not item.nota_path or not Path(item.nota_path).exists():
-        return "Não achei a nota desse link (foi movida ou apagada?)."
-    atual = Path(item.nota_path)
+    atual = achar_nota(settings.saved_dir, item.url_canonica, item.nota_path)
+    if not atual:
+        return "Não achei a nota desse link (foi apagada?)."
     novo = mover_categoria(settings, atual, categoria)
     queue.set_nota(item.id, item.titulo or atual.stem, str(novo))
     return f"Movido para {categoria}: {item.titulo or atual.stem}"
