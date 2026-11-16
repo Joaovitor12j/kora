@@ -1,0 +1,10 @@
+[Unit]
+Description=Kora — resumo semanal, domingo à noite
+
+[Timer]
+OnCalendar=Sun 20:00
+# Se o computador estava desligado no domingo, roda ao ligar.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

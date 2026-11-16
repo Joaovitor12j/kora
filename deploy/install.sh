@@ -9,10 +9,10 @@ set -euo pipefail
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 DESTINO="$HOME/.config/systemd/user"
-UNITS=(kora-bot.service kora-web.service kora-worker.timer kora-ytdlp-update.timer)
+UNITS=(kora-bot.service kora-web.service kora-worker.timer kora-ytdlp-update.timer kora-digest.timer)
 
 if [ "${1:-}" = "uninstall" ]; then
-    systemctl --user disable --now "${UNITS[@]}" kora-worker.service kora-ytdlp-update.service 2>/dev/null || true
+    systemctl --user disable --now "${UNITS[@]}" kora-worker.service kora-ytdlp-update.service kora-digest.service 2>/dev/null || true
     rm -f "$DESTINO"/kora-*.service "$DESTINO"/kora-*.timer
     systemctl --user daemon-reload
     echo "serviços do Kora removidos"

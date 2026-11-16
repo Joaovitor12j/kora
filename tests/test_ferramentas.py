@@ -93,3 +93,41 @@ def test_catalogo_junta_grafias_e_notas(tmp_path):
     escrever_catalogo(s, "2026-11-17")
     assert "minha anotação" in caminho.read_text(encoding="utf-8")  # só o bloco automático é reescrito
     assert [x for x in s.saved_dir.rglob("Ferramentas.md")] == [caminho] and juntar(s.saved_dir) == itens  # o catálogo não conta como nota
+
+
+def test_url_so_vale_se_for_da_ferramenta():
+    from kora.ferramenta_itens import url_combina
+    assert url_combina("Remotion", "https://remotion.dev")
+    assert url_combina("godly.website", "http://godly.website")
+    assert url_combina("ppt-master", "https://github.com/a/ppt-master")
+    assert not url_combina("Remotion", "https://github.com/a/video-shotcraft")
+    assert not url_combina("GitHub", "https://github.com/a/video-editor-skills")
+    assert not url_combina("Three.js", "https://github.com/a/dioramas")
+
+
+def test_limpar_tira_plataforma_e_corrige_grafia():
+    itens = [{"nome": "Instagram", "url": ""}, {"nome": "Cloud Code", "url": ""}, {"nome": "claude-code", "url": ""}]
+    assert limpar(itens, "") == [{"nome": "Claude Code", "url": ""}]
+
+
+def test_classificar_ignora_ferramentas_de_receita(tmp_path):
+    resp = {**BOM, "categoria": "receitas", "ferramentas": [{"nome": "Alho", "url": ""}]}
+    m = Meta(url="u", plataforma="x", titulo="T", descricao="x")
+    assert classificar(m, Fake("a", json.dumps(resp)), cfg(tmp_path), []) and m.ferramentas == []
+
+
+def test_corrigir_revalida_notas_ja_gravadas(tmp_path):
+    from kora.ferramentas import corrigir
+    s = cfg(tmp_path)
+    ruim = nota(s, "Ruim", [{"nome": "Remotion", "url": "https://github.com/a/video-shotcraft"},
+                            {"nome": "Instagram", "url": ""}], extra_desc=" https://github.com/a/video-shotcraft")
+    receita = Meta(url="r", plataforma="x", titulo="Receita", categoria="receitas", resumo="r", ia="a/m",
+                   descricao="d" * 250, ferramentas=[{"nome": "Alho", "url": ""}])
+    rp = write_note(s.saved_dir / "receitas", receita, 2)
+    assert corrigir(s, aplicar=False) == 2 and "Instagram" in ruim.read_text(encoding="utf-8")
+    assert corrigir(s, aplicar=True) == 2 and corrigir(s, aplicar=True) == 0
+    lida, _ = ler_nota(ruim)
+    assert lida.ferramentas == [{"nome": "Remotion", "url": ""}]
+    assert "ferramentas: [Remotion]" in ruim.read_text(encoding="utf-8")
+    texto = rp.read_text(encoding="utf-8")
+    assert "ferramentas: []" in texto and "## Ferramentas" not in texto

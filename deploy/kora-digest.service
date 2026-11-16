@@ -1,0 +1,12 @@
+[Unit]
+Description=Kora — resumo semanal do acervo (nota no vault e aviso no Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=@REPO@
+ExecStart=@REPO@/.venv/bin/kora-digest --enviar
+ExecStartPost=@REPO@/.venv/bin/kora-temas --apply
+Nice=10
+NoNewPrivileges=true

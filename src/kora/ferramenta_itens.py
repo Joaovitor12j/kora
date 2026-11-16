@@ -15,6 +15,12 @@ def normalizar(texto: str) -> str:
 
 
 MAX_FERRAMENTAS = 8
+# Categorias em que "ferramenta" não faz sentido (ingredientes, perfis e lojas viravam ferramenta).
+SEM_FERRAMENTAS = {"receitas", "casa", "saúde", "finanças", "humor"}
+# Redes onde o post foi publicado não contam como ferramenta do conteúdo.
+PLATAFORMAS = {"instagram", "tiktok", "x", "twitter", "youtube"}
+# Grafias erradas frequentes (a transcrição do áudio ouve "Claude" como "Cloud").
+CANONICAS = {"cloud code": "Claude Code", "claudecode": "Claude Code", "claude-code": "Claude Code"}
 _URL = re.compile(r"^https?://\S+$", re.I)
 
 SCHEMA_ITEM = {
@@ -24,6 +30,27 @@ SCHEMA_ITEM = {
     "additionalProperties": False,
 }
 SCHEMA_CAMPO = {"type": "array", "items": SCHEMA_ITEM}
+
+
+def _alnum(s: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", normalizar(s))
+
+
+HOSPEDEIROS = {"github.com", "gitlab.com", "huggingface.co", "npmjs.com", "pypi.org"}
+
+
+def url_combina(nome: str, url: str) -> bool:
+    """O link tem que ser da própria ferramenta: o nome (sem símbolos) aparece na URL.
+
+    Em hospedeiros de repositório (GitHub etc.) o nome tem que estar no caminho, não só no domínio:
+    evita pôr o repositório de outra ferramenta (Remotion -> github.com/x/video-shotcraft) e o link
+    de um repo qualquer em "GitHub".
+    """
+    sem_esquema = url.split("//", 1)[-1]
+    host, _, caminho = sem_esquema.partition("/")
+    host = host.removeprefix("www.").lower()
+    n = _alnum(nome)
+    return bool(n) and n in _alnum(caminho if host in HOSPEDEIROS else sem_esquema)
 
 
 def limpar(itens: list, texto: str = "") -> list[dict[str, str]]:
@@ -36,7 +63,10 @@ def limpar(itens: list, texto: str = "") -> list[dict[str, str]]:
         url = str(url).strip()
         if not nome or len(nome) > 60:
             continue
-        if not (_URL.match(url) and url.lower().rstrip("/") in conhecidas):
+        nome = CANONICAS.get(normalizar(nome), nome)
+        if normalizar(nome) in PLATAFORMAS:
+            continue
+        if not (_URL.match(url) and url.lower().rstrip("/") in conhecidas and url_combina(nome, url)):
             url = ""
         chave = normalizar(nome)
         if chave not in vistos or (url and not vistos[chave]["url"]):
