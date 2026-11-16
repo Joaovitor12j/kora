@@ -19,7 +19,8 @@ from .config import Settings, get_settings
 from .extractors.meta import Meta
 from .llm import Provider, build_provider
 from .logs import configurar
-from .ferramenta_itens import MAX_FERRAMENTAS, SCHEMA_CAMPO, limpar, linhas_secao, ler_secao, texto_do_post
+from .ferramenta_itens import (MAX_FERRAMENTAS, SCHEMA_CAMPO, SEM_FERRAMENTAS, limpar, ler_secao, linhas_secao,
+                               texto_do_post)
 from .vault import ler_nota
 
 log = logging.getLogger("kora.ferramentas")
@@ -48,6 +49,8 @@ def sem_ferramentas(raiz: Path):
         except OSError:
             continue
         cab = texto.split("\n---", 1)[0]
+        if meta.categoria in SEM_FERRAMENTAS:
+            continue  # nada a perguntar: receita, casa etc. não têm ferramentas
         if "tipo: link" in cab and status == "processado" and not re.search(r"^ferramentas:", cab, re.M):
             yield nota, meta
 
@@ -87,6 +90,31 @@ def atribuir(settings: Settings, provider: Provider, aplicar: bool, limite: int 
         if aplicar:
             gravar(nota, itens)
     return com, sem, falhas
+
+
+def corrigir(settings: Settings, aplicar: bool) -> int:
+    """Revalida as ferramentas já gravadas: tira as de categorias sem sentido, plataformas e links de outra ferramenta."""
+    n = 0
+    for nota in sorted(settings.saved_dir.rglob("*.md")):
+        try:
+            texto = nota.read_text(encoding="utf-8")
+            meta, status = ler_nota(nota)
+        except OSError:
+            continue
+        if "tipo: link" not in texto[:2000] or not meta.ferramentas:
+            continue
+        itens = [] if meta.categoria in SEM_FERRAMENTAS else limpar(
+            meta.ferramentas, texto_do_post(meta) + " " + " ".join(f["url"] for f in meta.ferramentas))
+        if itens == meta.ferramentas:
+            continue
+        n += 1
+        if aplicar:
+            nomes = ", ".join(f["nome"] for f in itens)
+            novo = re.sub(r"^ferramentas:.*$", lambda _: f"ferramentas: [{nomes}]", texto, count=1, flags=re.M)
+            novo = re.sub(r"## Ferramentas\n.*?\n\n", lambda _: ("## Ferramentas\n" + "\n".join(linhas_secao(itens)) + "\n\n") if itens else "",
+                          novo, count=1, flags=re.S)
+            nota.write_text(novo, encoding="utf-8")
+    return n
 
 
 # --- catálogo ---------------------------------------------------------------------------------
@@ -146,10 +174,15 @@ def main() -> None:
     ap.add_argument("--limit", type=int, help="no máximo N notas")
     ap.add_argument("--apply", action="store_true", help="grava nas notas")
     ap.add_argument("--catalogo", action="store_true", help="só reescreve o Ferramentas.md")
+    ap.add_argument("--corrigir", action="store_true", help="revalida as ferramentas já gravadas (links e categorias)")
     args = ap.parse_args()
     settings = get_settings()
     configurar(settings.log_level)
-    if not args.catalogo:
+    if args.corrigir:
+        print(f"{corrigir(settings, args.apply)} nota(s) {'corrigida(s)' if args.apply else 'seriam corrigidas'}")
+        if not args.apply:
+            return
+    elif not args.catalogo:
         provider = build_provider(settings)
         if provider is None:
             raise SystemExit("Defina LLM_PROVIDER no .env (anthropic, deepseek ou ollama).")
