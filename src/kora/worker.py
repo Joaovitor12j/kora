@@ -12,6 +12,7 @@ from .extractors.meta import Meta, fetch_meta
 from .indice import garantir_indice
 from .logs import configurar
 from .llm import Provider, build_provider
+from .relacionadas import carregar, linha, parecidas
 from .media import attach_imagens, attach_link, attach_transcript
 from .telegram_api import send_message
 from .vault import destino, tags_existentes, write_note
@@ -28,9 +29,20 @@ def process(queue: Queue, settings: Settings, item: Item, provider: Provider | N
     attach_imagens(meta, settings)
     attach_link(meta)
     classificar(meta, provider, settings, tags_existentes(settings.saved_dir))
+    achar_relacionadas(settings, meta)
     path = write_note(destino(settings, meta), meta, item.id)
     queue.done(item.id, meta.titulo, str(path))
     return meta
+
+
+def achar_relacionadas(settings: Settings, meta: Meta) -> None:
+    """Liga a nota nova às parecidas do acervo. Nunca derruba o salvamento."""
+    if not meta.categoria:
+        return
+    try:
+        meta.relacionadas = [linha(p) for p in parecidas(carregar(settings.saved_dir), meta)]
+    except Exception:
+        log.warning("não consegui achar notas relacionadas de %s", meta.url, exc_info=True)
 
 
 def primeira_frase(texto: str, limite: int = 200) -> str:
@@ -44,7 +56,11 @@ def primeira_frase(texto: str, limite: int = 200) -> str:
 def resposta(meta: Meta) -> str:
     if not meta.categoria:
         return f"salvo (sem IA): {meta.titulo}"
-    return f"salvo em {meta.categoria}: {meta.titulo}\n{primeira_frase(meta.resumo)}"
+    texto = f"salvo em {meta.categoria}: {meta.titulo}\n{primeira_frase(meta.resumo)}"
+    if meta.relacionadas:
+        nome = re.sub(r"^\d{4}-\d{2}-\d{2} ", "", meta.relacionadas[0].removeprefix("- [[").removesuffix("]]"))
+        texto += f"\nparecida com: {nome}"
+    return texto
 
 
 def notify(settings: Settings, item: Item, text: str) -> int | None:
