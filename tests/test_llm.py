@@ -188,7 +188,7 @@ def classificada():
 
 def test_render_processed_note():
     out = render(classificada(), "2026-10-17")
-    assert "categoria: design\ntags: [motion-graphics, claude]\nstatus: processado\nia: \"a/m\"\n---" in out
+    assert "categoria: design\nferramentas: []\ntags: [motion-graphics, claude]\nstatus: processado\nia: \"a/m\"\n---" in out
     assert "## Resumo\nResumo.\nSegunda linha.\n\n## Pontos-chave\n- a\n- b\n\n## Legenda original" in out
 
 
