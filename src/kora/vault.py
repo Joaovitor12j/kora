@@ -1,5 +1,6 @@
 import json
 import re
+import shutil
 import time
 from pathlib import Path
 
@@ -36,6 +37,28 @@ def _conteudo(meta: Meta) -> list[str]:
     return ["## Transcrição", f"> [!note]- {titulo}", *corpo, ""]
 
 
+def salvar_imagens(settings, meta: Meta, item_id: int) -> None:
+    """Grava `meta.imagens_salvar` em `<salvos>/_anexos/<id>/NN.ext` e deixa os caminhos (a partir da raiz
+    do vault) em `meta.imagens_links`. Fica fora das pastas de categoria para a nota poder mudar de lugar."""
+    if not meta.imagens_salvar:
+        return
+    pasta = settings.saved_dir / "_anexos" / str(item_id)
+    shutil.rmtree(pasta, ignore_errors=True)  # reprocessar troca o conjunto inteiro
+    pasta.mkdir(parents=True)
+    meta.imagens_links = []
+    for i, (ext, dados) in enumerate(meta.imagens_salvar, 1):
+        arquivo = pasta / f"{i:02d}{ext or '.jpg'}"
+        arquivo.write_bytes(dados)
+        meta.imagens_links.append(arquivo.relative_to(settings.vault_path).as_posix())
+    meta.imagens_salvar = []
+
+
+def _imagens(meta: Meta) -> list[str]:
+    if not meta.imagens_links:
+        return []
+    return ["## Imagens", *(f"![[{link}]]" for link in meta.imagens_links), ""]
+
+
 def render(meta: Meta, criado: str) -> str:
     lines = [
         "---",
@@ -61,6 +84,7 @@ def render(meta: Meta, criado: str) -> str:
         f"# {meta.titulo}",
         "",
         *_resumo(meta),
+        *_imagens(meta),
         "## Legenda original",
         meta.descricao or "_(sem legenda)_",
         "",
@@ -147,6 +171,7 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
               re.findall(r"^## (.+?)\n(.*?)(?=^## |\Z)", corpo, re.M | re.S)}
     meta.resumo = secoes.get("Resumo", "")
     meta.pontos_chave = [l[2:].strip() for l in secoes.get("Pontos-chave", "").splitlines() if l.startswith("- ")]
+    meta.imagens_links = re.findall(r"!\[\[(.+?)\]\]", secoes.get("Imagens", ""))
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
     if "Conteúdo" in secoes:
