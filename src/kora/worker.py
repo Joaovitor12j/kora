@@ -56,7 +56,7 @@ def primeira_frase(texto: str, limite: int = 200) -> str:
 def resposta(meta: Meta) -> str:
     if not meta.categoria:
         return f"salvo (sem IA): {meta.titulo}"
-    texto = f"salvo em {meta.categoria}: {meta.titulo}\n{primeira_frase(meta.resumo)}"
+    texto = f"salvo em {meta.categoria}: {meta.titulo}\n{primeira_frase(meta.resumo)}\nid: {meta.id}"
     if meta.relacionadas:
         nome = re.sub(r"^\d{4}-\d{2}-\d{2} ", "", meta.relacionadas[0].removeprefix("- [[").removesuffix("]]"))
         texto += f"\nparecida com: {nome}"
