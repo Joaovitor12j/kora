@@ -3,6 +3,7 @@ import re
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from ..ferramentas import SCHEMA_CAMPO, limpar
 from ..tags import normalizar_tag
 from ..taxonomia import CATEGORIAS, normalizar_assunto, normalizar_categoria
 
@@ -18,6 +19,7 @@ SCHEMA = {
         "pontos_chave": {"type": "array", "items": {"type": "string"}},
         "categoria": {"type": "string", "enum": list(CATEGORIAS)},
         "assunto": {"type": "string"},
+        "ferramentas": SCHEMA_CAMPO,
         "tags": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["titulo", "resumo", "pontos_chave", "categoria", "tags"],
@@ -31,6 +33,7 @@ class Classificacao(BaseModel):
     pontos_chave: list[str]
     categoria: str
     assunto: str = ""
+    ferramentas: list = []
     tags: list[str]
 
     @field_validator("titulo", "resumo")
@@ -61,6 +64,12 @@ class Classificacao(BaseModel):
     def _assunto(self):
         self.assunto = normalizar_assunto(self.categoria, self.assunto)  # assunto de outra categoria some
         return self
+
+
+    @field_validator("ferramentas", mode="before")
+    @classmethod
+    def _ferramentas(cls, v):
+        return v if isinstance(v, list) else []  # a validade da URL é checada contra o texto do post em classificar
 
 
 _CERCA = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)

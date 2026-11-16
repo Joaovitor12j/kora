@@ -26,6 +26,7 @@ class Meta:
     resumo: str = ""
     pontos_chave: list[str] = field(default_factory=list)
     categoria: str = ""
+    ferramentas: list[dict] = field(default_factory=list)  # [{"nome", "url"}] citadas no post
     assunto: str = ""  # subdivisão da categoria (taxonomia.ASSUNTOS), opcional
     tags: list[str] = field(default_factory=list)
     ia: str = ""  # provedor/modelo que classificou

@@ -4,13 +4,17 @@ import time
 from pathlib import Path
 
 from .extractors.meta import Meta
+from .ferramenta_itens import ler_secao, linhas_secao
 
 INVALID = re.compile(r'[\\/:*?"<>|#^\[\]\n\r\t]+')
 
 
 def slug(text: str, limit: int = 60) -> str:
     cleaned = re.sub(r"\s+", " ", INVALID.sub(" ", text)).strip(" .")
-    return cleaned[:limit].rstrip(" .") or "sem titulo"
+    corte = cleaned[:limit]
+    if len(cleaned) > limit and cleaned[limit] != " " and " " in corte[limit // 2:]:
+        corte = corte.rsplit(" ", 1)[0]  # não deixa o nome terminar no meio de uma palavra
+    return corte.rstrip(" .") or "sem titulo"
 
 
 def _q(value: str) -> str:
@@ -21,7 +25,8 @@ def _resumo(meta: Meta) -> list[str]:
     if not meta.resumo:
         return []
     pontos = [f"- {p}" for p in meta.pontos_chave]
-    return ["## Resumo", meta.resumo, "", *(["## Pontos-chave", *pontos, ""] if pontos else [])]
+    ferramentas = ["## Ferramentas", *linhas_secao(meta.ferramentas), ""] if meta.ferramentas else []
+    return ["## Resumo", meta.resumo, "", *(["## Pontos-chave", *pontos, ""] if pontos else []), *ferramentas]
 
 
 def _conteudo(meta: Meta) -> list[str]:
@@ -55,6 +60,8 @@ def render(meta: Meta, criado: str) -> str:
         lines.append(f"assunto: {meta.assunto}")
     if meta.pobre:
         lines.append("conteudo: pobre")
+    if meta.categoria:  # `ferramentas: []` também vale: marca que a nota já foi examinada
+        lines.append(f"ferramentas: [{', '.join(f['nome'] for f in meta.ferramentas)}]")
     lines += [
         f"tags: [{', '.join(meta.tags)}]",
         f"status: {'processado' if meta.categoria else 'pendente'}",
@@ -158,6 +165,7 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
     meta.pontos_chave = [l[2:].strip() for l in secoes.get("Pontos-chave", "").splitlines() if l.startswith("- ")]
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
+    meta.ferramentas = ler_secao(secoes.get("Ferramentas", ""))
     meta.relacionadas = [l for l in secoes.get("Relacionado", "").splitlines() if l.startswith("- ")]
     if "Conteúdo do link" in secoes:
         primeira, _, resto = secoes["Conteúdo do link"].partition("\n")

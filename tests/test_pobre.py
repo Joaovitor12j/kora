@@ -50,7 +50,7 @@ def test_nota_pobre_e_nota_com_link_fazem_round_trip(tmp_path):
     s = Settings(telegram_bot_token="t", telegram_allowed_chat_id=1, vault_path=tmp_path / "v",
                  db_path=tmp_path / "q.sqlite", _env_file=None)
     pobre = write_note(s.saved_dir, meta(categoria="outros", resumo="r"), 1)
-    assert "conteudo: pobre\ntags:" in pobre.read_text(encoding="utf-8")
+    assert "conteudo: pobre\nferramentas: []\ntags:" in pobre.read_text(encoding="utf-8")
     com_link = meta(categoria="outros", resumo="r", conteudo="texto\n\noutro", conteudo_tipo="link",
                     link_url="https://dotstore.io", titulo="Com link")
     p2 = write_note(s.saved_dir, com_link, 2)

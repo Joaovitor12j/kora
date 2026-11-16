@@ -8,6 +8,7 @@ META = Meta(url="https://x.com/a/status/1", plataforma="x", titulo='Como: usar "
 def test_slug_strips_invalid_chars_and_limits():
     assert slug('a/b:c*d?"e') == "a b c d e"
     assert len(slug("x" * 200)) == 60
+    assert slug("um dois tres quatro cinco seis sete oito nove dez onze doze treze", 30) == "um dois tres quatro cinco seis"
     assert slug("???") == "sem titulo"
 
 
