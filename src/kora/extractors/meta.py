@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 from . import article, fallback, ytdlp
 
 
+MIN_DESCRICAO = 200  # abaixo disso, sem transcrição/artigo/imagens, a nota é marcada `conteudo: pobre`
+
+
 @dataclass
 class Meta:
     url: str
@@ -13,7 +16,8 @@ class Meta:
     descricao: str = ""
     publicado: str = ""  # AAAA-MM-DD
     conteudo: str = ""  # texto do artigo, legenda do site ou transcrição
-    conteudo_tipo: str = ""  # artigo | legenda | transcricao | imagens
+    conteudo_tipo: str = ""  # artigo | legenda | transcricao | imagens | link
+    link_url: str = ""  # página citada na legenda de onde veio o conteúdo (conteudo_tipo "link")
     tem_midia: bool = False
     duracao: float = 0.0
     legendas: dict = field(default_factory=dict)
@@ -26,6 +30,11 @@ class Meta:
     ia: str = ""  # provedor/modelo que classificou
     imagens_visao: list[bytes] = field(default_factory=list, repr=False)  # JPEGs reduzidos, só em memória
     criado: str = ""  # AAAA-MM-DD da nota original, preservado ao reprocessar
+
+    @property
+    def pobre(self) -> bool:
+        """Sem texto além da legenda e com legenda curta: quase nada para resumir de verdade."""
+        return not self.conteudo and len(self.descricao.strip()) < MIN_DESCRICAO
 
 
 def _titulo(raw: str | None, descricao: str, url: str) -> str:

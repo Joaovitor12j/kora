@@ -29,6 +29,8 @@ def _conteudo(meta: Meta) -> list[str]:
         return []
     if meta.conteudo_tipo == "artigo":
         return ["## Conteúdo", meta.conteudo, ""]
+    if meta.conteudo_tipo == "link":
+        return ["## Conteúdo do link", f"Fonte: {meta.link_url}", "", meta.conteudo, ""]
     corpo = [f"> {linha}" for linha in meta.conteudo.splitlines() if linha.strip()]
     if meta.conteudo_tipo == "imagens":
         return ["## Texto das imagens", "> [!note]- Texto lido das imagens (OCR)", *corpo, ""]
@@ -51,6 +53,8 @@ def render(meta: Meta, criado: str) -> str:
         lines.append(f"categoria: {meta.categoria}")
     if meta.assunto:
         lines.append(f"assunto: {meta.assunto}")
+    if meta.pobre:
+        lines.append("conteudo: pobre")
     lines += [
         f"tags: [{', '.join(meta.tags)}]",
         f"status: {'processado' if meta.categoria else 'pendente'}",
@@ -152,7 +156,11 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
     meta.pontos_chave = [l[2:].strip() for l in secoes.get("Pontos-chave", "").splitlines() if l.startswith("- ")]
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
-    if "Conteúdo" in secoes:
+    if "Conteúdo do link" in secoes:
+        primeira, _, resto = secoes["Conteúdo do link"].partition("\n")
+        meta.link_url, meta.conteudo_tipo = primeira.removeprefix("Fonte:").strip(), "link"
+        meta.conteudo = resto.strip("\n")
+    elif "Conteúdo" in secoes:
         meta.conteudo, meta.conteudo_tipo = secoes["Conteúdo"], "artigo"
     elif "Texto das imagens" in secoes:
         linhas = secoes["Texto das imagens"].splitlines()

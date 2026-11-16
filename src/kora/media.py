@@ -4,9 +4,10 @@ from pathlib import Path
 
 from .config import Settings
 from . import ocr
-from .extractors import imagens, legendas, ytdlp
+from .extractors import article, imagens, legendas, ytdlp
 from .extractors.meta import Meta
 from .transcribe import transcribe
+from .urls import extract_urls, platform_of
 
 log = logging.getLogger("kora.media")
 
@@ -63,3 +64,24 @@ def attach_imagens(meta: Meta, settings: Settings) -> None:
                 meta.imagens_visao = [ocr.reduzir(a) for a in arquivos[:4]]
     except Exception:
         log.warning("falha ao ler imagens de %s", meta.url, exc_info=True)
+
+
+MAX_LINKS = 2  # tentativas por post
+
+
+def attach_link(meta: Meta) -> None:
+    """Post só com legenda curta que aponta para uma página: lê a página e usa o texto dela.
+
+    Só age quando não há texto de outra fonte (transcrição, OCR, artigo). Falhas não derrubam o item.
+    """
+    if meta.conteudo or not meta.pobre:
+        return
+    candidatos = [u for u in extract_urls(meta.descricao) if platform_of(u) == "web" and u != meta.url]
+    for url in candidatos[:MAX_LINKS]:
+        try:
+            info = article.extract(url)
+        except Exception as e:
+            log.info("link da legenda sem texto (%s): %s", url, str(e)[:100])
+            continue
+        meta.conteudo, meta.conteudo_tipo, meta.link_url = info["conteudo"], "link", url
+        return

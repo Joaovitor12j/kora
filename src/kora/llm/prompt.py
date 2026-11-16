@@ -53,9 +53,13 @@ def user_prompt(meta: Meta, max_chars: int) -> str:
     ]
     if meta.conteudo:
         rotulo = {"artigo": "Texto do artigo", "legenda": "Legenda do vídeo",
-                  "imagens": "Texto lido das imagens do post (OCR, um bloco por slide)"}.get(
+                  "imagens": "Texto lido das imagens do post (OCR, um bloco por slide)",
+                  "link": f"Texto da página citada na legenda ({meta.link_url})"}.get(
             meta.conteudo_tipo, "Transcrição do áudio")
         partes.append(f"{rotulo}:\n{_cortar(meta.conteudo, max_chars)}")
+    if meta.pobre:
+        partes.append("Aviso: há muito pouco texto aqui. Não invente nada além do que está escrito: "
+                      "resumo curto (1 a 2 linhas) e poucos pontos-chave.")
     if meta.imagens_visao:
         partes.append("As imagens do post seguem anexas; descreva o que elas mostram no resumo.")
     return "<conteudo>\n" + "\n\n".join(partes) + "\n</conteudo>\n\nResponda apenas com o JSON."
