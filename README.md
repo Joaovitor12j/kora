@@ -71,6 +71,12 @@ O vault é a fonte da verdade: nada importante fica só no banco. A fila SQLite 
 | **Artigos e páginas** | título, autor, data | texto do artigo | extraído com `trafilatura`; sem texto suficiente, cai para o título e a descrição |
 | **YouTube** | título, canal, descrição | legenda do site ou transcrição | o YouTube pode pedir login (anti-bot) e a Kora ainda não usa cookies; veja [limitações](#limitações-conhecidas) |
 
+**Imagens como referência.** Por padrão a Kora lê o texto das imagens e descarta os arquivos. Para guardar as
+imagens na nota (`## Imagens`, em `Referencias/Salvos/_anexos/<id>/`, versionadas junto com o vault), escreva
+uma palavra com o link: `ref`, `imagem`, `imagens`, `foto` ou `#ref`. Isso vale também para um link já salvo:
+reenvie com a palavra e a nota é refeita com as imagens. Quando o OCR acha pouco texto (menos de 80 caracteres),
+a Kora guarda as imagens sozinha, porque aí a imagem é o conteúdo.
+
 Vídeos com mais de `MAX_AUDIO_MINUTES` (30 por padrão) ficam só com a legenda, sem transcrição. Vídeo sem
 fala gera nota sem a seção de transcrição, e isso é esperado.
 

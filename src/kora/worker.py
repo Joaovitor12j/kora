@@ -3,6 +3,7 @@ import logging
 import re
 import threading
 import time
+from pathlib import Path
 
 from .config import Settings, get_settings
 from .db import CONCLUIDO, FALHOU, Item, Queue
@@ -14,7 +15,7 @@ from .logs import configurar
 from .llm import Provider, build_provider
 from .media import attach_imagens, attach_transcript
 from .telegram_api import send_message
-from .vault import destino, tags_existentes, write_note
+from .vault import destino, ler_nota, salvar_imagens, tags_existentes, write_note
 
 log = logging.getLogger("kora.worker")
 IDLE_SLEEP = 2.0
@@ -25,9 +26,18 @@ def process(queue: Queue, settings: Settings, item: Item, provider: Provider | N
     """Extrai, classifica e grava a nota. Sem IA, ela fica em _inbox com status pendente."""
     meta = fetch_meta(item.url_canonica, item.plataforma)
     attach_transcript(meta, settings)
-    attach_imagens(meta, settings)
+    attach_imagens(meta, settings, guardar=bool(item.guardar_imagens))
+    anterior = Path(item.nota_path) if item.nota_path and Path(item.nota_path).exists() else None
+    if anterior:  # refazer a nota (ex.: pediu as imagens depois): mantém a data de criação e as imagens já guardadas
+        antigo, _ = ler_nota(anterior)
+        meta.criado = antigo.criado
+        if not meta.imagens_salvar:
+            meta.imagens_links = antigo.imagens_links
     classificar(meta, provider, settings, tags_existentes(settings.saved_dir))
+    salvar_imagens(settings, meta, item.id)
     path = write_note(destino(settings, meta), meta, item.id)
+    if anterior and anterior != path:
+        anterior.unlink(missing_ok=True)
     queue.done(item.id, meta.titulo, str(path))
     return meta
 
