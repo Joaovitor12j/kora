@@ -29,6 +29,23 @@ GROUP BY default(categoria, "sem categoria") AS grupo
 SORT length(rows) DESC
 ```
 
+## Por assunto
+```dataview
+TABLE WITHOUT ID grupo AS Assunto, length(rows) AS Notas
+FROM "{pasta}"
+WHERE tipo = "link" AND assunto
+GROUP BY categoria + " / " + assunto AS grupo
+SORT length(rows) DESC
+```
+
+## Pouco conteúdo (para revisar)
+```dataview
+LIST
+FROM "{pasta}"
+WHERE tipo = "link" AND conteudo = "pobre"
+SORT criado DESC
+```
+
 ## Por plataforma
 ```dataview
 TABLE WITHOUT ID plataforma AS Plataforma, length(rows) AS Notas

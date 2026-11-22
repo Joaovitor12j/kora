@@ -75,6 +75,6 @@ def test_indice_created_once_and_never_overwritten(s):
     assert garantir_indice(s) is True
     caminho = s.saved_dir / NOME
     texto = caminho.read_text(encoding="utf-8")
-    assert 'FROM "Referencias/Salvos"' in texto and "{pasta}" not in texto and texto.count("```dataview") == 6
+    assert 'FROM "Referencias/Salvos"' in texto and "{pasta}" not in texto and texto.count("```dataview") == 8
     caminho.write_text("editado pelo usuário", encoding="utf-8")
     assert garantir_indice(s) is False and caminho.read_text(encoding="utf-8") == "editado pelo usuário"

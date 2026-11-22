@@ -5,7 +5,7 @@ from .extractors.meta import Meta
 from .llm import Provider
 from .llm.prompt import system_prompt, user_prompt
 from .llm.schema import SCHEMA, parse
-from .ferramenta_itens import limpar, texto_do_post
+from .ferramenta_itens import SEM_FERRAMENTAS, limpar, texto_do_post
 from .tags import normalizar_tags
 
 log = logging.getLogger("kora.classificar")
@@ -24,6 +24,6 @@ def classificar(meta: Meta, provider: Provider | None, settings: Settings, tags_
         return False
     meta.titulo, meta.resumo, meta.pontos_chave = c.titulo, c.resumo, c.pontos_chave
     meta.categoria, meta.assunto, meta.ia = c.categoria, c.assunto, provider.label
-    meta.ferramentas = limpar(c.ferramentas, texto_do_post(meta))
+    meta.ferramentas = [] if c.categoria in SEM_FERRAMENTAS else limpar(c.ferramentas, texto_do_post(meta))
     meta.tags = normalizar_tags(c.tags, c.categoria, meta.plataforma)
     return True
