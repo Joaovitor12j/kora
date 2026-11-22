@@ -17,6 +17,7 @@ class Meta:
     publicado: str = ""  # AAAA-MM-DD
     conteudo: str = ""  # texto do artigo, legenda do site ou transcrição
     conteudo_tipo: str = ""  # artigo | legenda | transcricao | imagens | link
+    relacionadas: list[str] = field(default_factory=list)  # linhas "- [[nota]]" da seção ## Relacionado
     link_url: str = ""  # página citada na legenda de onde veio o conteúdo (conteudo_tipo "link")
     tem_midia: bool = False
     duracao: float = 0.0

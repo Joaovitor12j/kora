@@ -96,6 +96,8 @@ def render(meta: Meta, criado: str) -> str:
         "",
     ]
     lines += _conteudo(meta)
+    if meta.relacionadas:
+        lines += ["## Relacionado", *meta.relacionadas, ""]
     return "\n".join(lines)
 
 
@@ -198,6 +200,7 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
     meta.imagens_links = re.findall(r"!\[\[(.+?)\]\]", secoes.get("Imagens", ""))
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
+    meta.relacionadas = [l for l in secoes.get("Relacionado", "").splitlines() if l.startswith("- ")]
     if "Conteúdo do link" in secoes:
         primeira, _, resto = secoes["Conteúdo do link"].partition("\n")
         meta.link_url, meta.conteudo_tipo = primeira.removeprefix("Fonte:").strip(), "link"
