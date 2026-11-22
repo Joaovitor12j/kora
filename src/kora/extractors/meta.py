@@ -32,6 +32,8 @@ class Meta:
     tags: list[str] = field(default_factory=list)
     ia: str = ""  # provedor/modelo que classificou
     imagens_visao: list[bytes] = field(default_factory=list, repr=False)  # JPEGs reduzidos, só em memória
+    imagens_salvar: list[tuple[str, bytes]] = field(default_factory=list, repr=False)  # (extensão, bytes) a gravar no vault
+    imagens_links: list[str] = field(default_factory=list)  # caminhos no vault das imagens guardadas
     criado: str = ""  # AAAA-MM-DD da nota original, preservado ao reprocessar
 
     @property

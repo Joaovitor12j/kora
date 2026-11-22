@@ -14,6 +14,9 @@ Todas as mudanças relevantes do projeto ficam aqui. O formato segue o
 
 ### Adicionado
 
+- Imagens de carrosséis como referência: uma palavra (`ref`, `imagem`…) junto do link guarda as imagens na
+  nota (`## Imagens`, em `_anexos/<id>/`); reenviar um link já salvo com a palavra refaz a nota. O OCR com
+  pouco texto guarda as imagens sozinho.
 - Posts de foto e carrosséis (Instagram, TikTok `/photo/`, X): a Kora baixa as imagens, lê o texto com OCR
   local (RapidOCR) e o usa no resumo; as imagens são descartadas. Modelo de visão opcional
   (`IMAGENS_VISAO`) para imagens sem texto; cookies do Instagram opcionais (`IMAGENS_COOKIES`).
