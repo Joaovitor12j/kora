@@ -25,7 +25,7 @@ class Resultado:
 def _campos(meta: Meta) -> list[tuple[int, str]]:
     """(peso, texto) por campo: título e tags valem mais que o corpo."""
     return [
-        (5, meta.titulo),
+        (5, f"{meta.titulo} {meta.id}"),
         (4, " ".join([meta.categoria, *meta.tags])),
         (2, " ".join([meta.autor, meta.resumo, *meta.pontos_chave])),
         (1, " ".join([meta.descricao, meta.conteudo, meta.plataforma])),

@@ -228,7 +228,7 @@ def test_worker_moves_note_to_category_and_replies(env):
     assert worker.run_once(q, s, Fake("a", json.dumps(BOM)))
     item = q.get(1)
     assert item.status == CONCLUIDO and item.nota_path.startswith(str(s.saved_dir / "design"))
-    assert sent == ["salvo em design: Motion com Claude\nResumo."]
+    assert len(sent) == 1 and sent[0].startswith("salvo em design: Motion com Claude\nResumo.\nid: k")
 
 
 def test_worker_without_ai_keeps_note_pending_in_inbox(env):

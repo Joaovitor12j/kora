@@ -73,6 +73,8 @@ def render(meta: Meta, criado: str) -> str:
         "tipo: link",
         f"plataforma: {meta.plataforma}",
         f"url: {_q(meta.url)}",
+        f"id: {meta.id}",
+        f"aliases: [{meta.id}]",  # no Obsidian, [[id]] abre a nota
         f"autor: {_q(meta.autor)}",
     ]
     if meta.publicado:

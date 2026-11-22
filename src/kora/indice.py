@@ -13,7 +13,7 @@ Links salvos pelo Kora (bot do Telegram). Este arquivo é criado uma única vez 
 
 ## Recentes
 ```dataview
-TABLE WITHOUT ID file.link AS Nota, categoria AS Categoria, plataforma AS Plataforma, autor AS Autor, criado AS Salvo
+TABLE WITHOUT ID file.link AS Nota, id AS Id, categoria AS Categoria, plataforma AS Plataforma, autor AS Autor, criado AS Salvo
 FROM "{pasta}"
 WHERE tipo = "link"
 SORT criado DESC, file.ctime DESC

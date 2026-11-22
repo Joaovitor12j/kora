@@ -1,3 +1,4 @@
+import hashlib
 import re
 from dataclasses import dataclass, field
 
@@ -34,6 +35,15 @@ class Meta:
     imagens_salvar: list[tuple[str, bytes]] = field(default_factory=list, repr=False)  # (extensão, bytes) a gravar no vault
     imagens_links: list[str] = field(default_factory=list)  # caminhos no vault das imagens guardadas
     criado: str = ""  # AAAA-MM-DD da nota original, preservado ao reprocessar
+
+    @property
+    def id(self) -> str:
+        """Identificador estável do link salvo: "k" + 8 hex do SHA-1 da URL canônica.
+
+        Depende só da URL, então o mesmo link tem o mesmo id em qualquer máquina, com ou sem fila,
+        e dá para calcular o id das notas antigas sem guardar estado.
+        """
+        return "k" + hashlib.sha1(self.url.strip().encode("utf-8")).hexdigest()[:8]
 
     @property
     def pobre(self) -> bool:
