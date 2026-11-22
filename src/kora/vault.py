@@ -72,6 +72,8 @@ def render(meta: Meta, criado: str) -> str:
         lines.append(f"publicado: {meta.publicado}")
     if meta.categoria:
         lines.append(f"categoria: {meta.categoria}")
+    if meta.assunto:
+        lines.append(f"assunto: {meta.assunto}")
     lines += [
         f"tags: [{', '.join(meta.tags)}]",
         f"status: {'processado' if meta.categoria else 'pendente'}",
@@ -163,6 +165,7 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
         autor=_json_ou_texto(_campo(cab, "autor")),
         publicado=_campo(cab, "publicado"),
         categoria=_campo(cab, "categoria"),
+        assunto=_campo(cab, "assunto"),
         tags=[t.strip() for t in tags.split(",") if t.strip()],
         criado=_campo(cab, "criado"),
         ia=_json_ou_texto(_campo(cab, "ia")),
@@ -198,6 +201,7 @@ def mover_categoria(settings, nota: Path, categoria: str) -> Path:
         cab = re.sub(r"^categoria:.*$", linha, cab, count=1, flags=re.M)
     else:  # nota pendente: entra antes de `tags:`
         cab = re.sub(r"^(tags:)", rf"{linha}\n\1", cab, count=1, flags=re.M)
+    cab = re.sub(r"^assunto:.*\n?", "", cab, flags=re.M).rstrip("\n")  # o assunto era da categoria antiga
     pasta = settings.saved_dir / categoria
     pasta.mkdir(parents=True, exist_ok=True)
     novo = pasta / nota.name

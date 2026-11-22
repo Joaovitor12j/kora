@@ -21,6 +21,7 @@ class Meta:
     resumo: str = ""
     pontos_chave: list[str] = field(default_factory=list)
     categoria: str = ""
+    assunto: str = ""  # subdivisão da categoria (taxonomia.ASSUNTOS), opcional
     tags: list[str] = field(default_factory=list)
     ia: str = ""  # provedor/modelo que classificou
     imagens_visao: list[bytes] = field(default_factory=list, repr=False)  # JPEGs reduzidos, só em memória
