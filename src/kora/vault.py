@@ -112,6 +112,23 @@ def write_note(directory: Path, meta: Meta, item_id: int, now: float | None = No
     return path
 
 
+def achar_nota(raiz: Path, url: str, caminho: str | None = None) -> Path | None:
+    """A nota de um link, mesmo que tenha sido movida de pasta (ex.: agrupada por mês).
+
+    Tenta o caminho guardado na fila; se não existe mais, procura no acervo pela linha `url:`.
+    """
+    if caminho and Path(caminho).is_file():
+        return Path(caminho)
+    linha = f"url: {_q(url)}"
+    for nota in sorted(raiz.rglob("*.md")):
+        try:
+            if linha in nota.read_text(encoding="utf-8")[:2000].splitlines():
+                return nota
+        except OSError:
+            continue
+    return None
+
+
 def destino(settings, meta: Meta) -> Path:
     """Pasta da categoria; sem categoria (IA indisponível) a nota espera em _inbox."""
     return settings.saved_dir / meta.categoria if meta.categoria else settings.inbox_dir
@@ -203,6 +220,8 @@ def mover_categoria(settings, nota: Path, categoria: str) -> Path:
         cab = re.sub(r"^(tags:)", rf"{linha}\n\1", cab, count=1, flags=re.M)
     cab = re.sub(r"^assunto:.*\n?", "", cab, flags=re.M).rstrip("\n")  # o assunto era da categoria antiga
     pasta = settings.saved_dir / categoria
+    if re.fullmatch(r"\d{4}-\d{2}", nota.parent.name):
+        pasta = pasta / nota.parent.name  # nota já agrupada por mês continua no mês, na categoria nova
     pasta.mkdir(parents=True, exist_ok=True)
     novo = pasta / nota.name
     n = 2
