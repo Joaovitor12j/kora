@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS itens (
     chat_id       INTEGER,
     message_id    INTEGER,
     resposta_id   INTEGER,
+    guardar_imagens INTEGER NOT NULL DEFAULT 0,
     proxima_em    REAL NOT NULL DEFAULT 0,
     criado_em     REAL NOT NULL,
     atualizado_em REAL NOT NULL
@@ -44,6 +45,7 @@ class Item:
     chat_id: int | None
     message_id: int | None
     resposta_id: int | None
+    guardar_imagens: int = 0
 
 
 class Queue:
@@ -61,6 +63,8 @@ class Queue:
         colunas = {r["name"] for r in self._conn.execute("PRAGMA table_info(itens)")}
         if "resposta_id" not in colunas:
             self._conn.execute("ALTER TABLE itens ADD COLUMN resposta_id INTEGER")
+        if "guardar_imagens" not in colunas:
+            self._conn.execute("ALTER TABLE itens ADD COLUMN guardar_imagens INTEGER NOT NULL DEFAULT 0")
 
     def close(self) -> None:
         self._conn.close()
@@ -82,7 +86,7 @@ class Queue:
 
     def enqueue(self, url: str, url_canonica: str, plataforma: str,
                 chat_id: int | None = None, message_id: int | None = None,
-                now: float | None = None) -> tuple[Item, bool]:
+                now: float | None = None, guardar_imagens: bool = False) -> tuple[Item, bool]:
         """Insere o link. Retorna (item, criado); criado=False se já existia."""
         now = time.time() if now is None else now
         with self._tx() as c:
@@ -90,9 +94,9 @@ class Queue:
             if row:
                 return self._item(row), False
             cur = c.execute(
-                "INSERT INTO itens (url, url_canonica, plataforma, chat_id, message_id, criado_em, atualizado_em) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (url, url_canonica, plataforma, chat_id, message_id, now, now),
+                "INSERT INTO itens (url, url_canonica, plataforma, chat_id, message_id, criado_em, atualizado_em, "
+                "guardar_imagens) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (url, url_canonica, plataforma, chat_id, message_id, now, now, int(guardar_imagens)),
             )
             row = c.execute("SELECT * FROM itens WHERE id = ?", (cur.lastrowid,)).fetchone()
         return self._item(row), True
@@ -141,6 +145,17 @@ class Queue:
             "UPDATE itens SET status = ?, tentativas = 0, proxima_em = 0, atualizado_em = ? WHERE id = ?",
             (NA_FILA, now, item_id),
         )
+
+    def pedir_imagens(self, item_id: int, now: float | None = None) -> Item:
+        """Marca o item para guardar as imagens. Já salvo ou falho volta para a fila para refazer a nota."""
+        now = time.time() if now is None else now
+        self._conn.execute(
+            "UPDATE itens SET guardar_imagens = 1, atualizado_em = ?, "
+            "status = CASE WHEN status IN (?, ?) THEN ? ELSE status END, "
+            "tentativas = CASE WHEN status IN (?, ?) THEN 0 ELSE tentativas END, "
+            "proxima_em = CASE WHEN status IN (?, ?) THEN 0 ELSE proxima_em END WHERE id = ?",
+            (now, CONCLUIDO, FALHOU, NA_FILA, CONCLUIDO, FALHOU, CONCLUIDO, FALHOU, item_id))
+        return self.get(item_id)
 
     def requeue_stuck(self) -> int:
         """Itens 'processando' de uma execução interrompida voltam para a fila."""

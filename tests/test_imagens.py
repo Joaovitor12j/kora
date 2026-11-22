@@ -80,3 +80,77 @@ def test_nota_com_texto_das_imagens_vai_e_volta(tmp_path):
     assert "## Texto das imagens" in nota.read_text(encoding="utf-8")
     lido, _ = ler_nota(nota)
     assert lido.conteudo_tipo == "imagens" and "[slide 2]" in lido.conteudo
+
+
+# --- guardar imagens como referência ---
+
+def test_quer_imagens():
+    from kora.urls import quer_imagens
+    assert quer_imagens("https://instagram.com/p/x ref")
+    assert quer_imagens("#REF https://instagram.com/p/x")
+    assert quer_imagens("imagens: https://instagram.com/p/x")
+    assert not quer_imagens("https://instagram.com/p/x")
+    assert not quer_imagens("https://site.com/referencia-de-design")  # só conta fora do link
+    assert not quer_imagens("olha que referências boas https://x.com/a/status/1".replace("referências", "coisas"))
+
+
+def test_db_guardar_e_pedir_depois(tmp_path):
+    from kora.db import CONCLUIDO, NA_FILA, Queue
+    q = Queue(tmp_path / "q.sqlite")
+    item, _ = q.enqueue("u", "c", "instagram")
+    assert not item.guardar_imagens
+    q.done(item.id, "T", "/x.md")
+    pedido = q.pedir_imagens(item.id)
+    assert pedido.guardar_imagens and pedido.status == NA_FILA
+    novo, _ = q.enqueue("u2", "c2", "instagram", guardar_imagens=True)
+    assert novo.guardar_imagens
+    q.close()
+
+
+def test_guarda_imagens_com_flag_ou_pouco_texto(settings, monkeypatch):
+    monkeypatch.setattr(imagens, "listar", lambda *a: ["u"])
+    monkeypatch.setattr(imagens, "baixar", lambda urls, pasta: [foto(pasta / "1.png", "OI")])
+    monkeypatch.setattr(ocr, "ler", lambda arquivo: "texto longo " * 20)
+    sem = Meta(url="u", plataforma="instagram", titulo="t")
+    media.attach_imagens(sem, settings)
+    assert sem.imagens_salvar == []  # texto suficiente e sem pedido: descarta
+    com = Meta(url="u", plataforma="instagram", titulo="t")
+    media.attach_imagens(com, settings, guardar=True)
+    assert len(com.imagens_salvar) == 1 and com.imagens_salvar[0][0] == ".png"
+    monkeypatch.setattr(ocr, "ler", lambda arquivo: "oi")
+    auto = Meta(url="u", plataforma="instagram", titulo="t")
+    media.attach_imagens(auto, settings)
+    assert len(auto.imagens_salvar) == 1  # pouco texto: a imagem é o conteúdo
+
+
+def test_nota_embute_imagens_e_ida_e_volta(settings, tmp_path):
+    from kora.vault import ler_nota, salvar_imagens, write_note
+    meta = Meta(url="https://instagram.com/p/x", plataforma="instagram", titulo="T", categoria="design",
+                imagens_salvar=[(".jpg", b"aaa"), (".png", b"bbb")])
+    salvar_imagens(settings, meta, 7)
+    assert meta.imagens_links == ["Referencias/Salvos/_anexos/7/01.jpg", "Referencias/Salvos/_anexos/7/02.png"]
+    assert (settings.vault_path / meta.imagens_links[1]).read_bytes() == b"bbb"
+    nota = write_note(settings.saved_dir / "design", meta, 7)
+    assert "## Imagens\n![[Referencias/Salvos/_anexos/7/01.jpg]]\n![[Referencias/Salvos/_anexos/7/02.png]]" in nota.read_text(encoding="utf-8")
+    assert ler_nota(nota)[0].imagens_links == meta.imagens_links
+
+
+def test_worker_guarda_imagens_e_refaz_nota(settings, monkeypatch):
+    from kora import worker
+    from kora.db import Queue
+    q = Queue(settings.db_path)
+    item, _ = q.enqueue("https://instagram.com/p/x", "https://instagram.com/p/x", "instagram", guardar_imagens=True)
+    monkeypatch.setattr(worker, "fetch_meta", lambda url, plat: Meta(url=url, plataforma=plat, titulo="Carrossel"))
+    monkeypatch.setattr(imagens, "listar", lambda *a: ["u"])
+    monkeypatch.setattr(imagens, "baixar", lambda urls, pasta: [foto(pasta / "1.png", "OI")])
+    monkeypatch.setattr(ocr, "ler", lambda arquivo: "slide")
+    worker.process(q, settings, item)
+    nota = next(settings.inbox_dir.glob("*.md"))
+    assert "![[Referencias/Salvos/_anexos/%d/01.png]]" % item.id in nota.read_text(encoding="utf-8")
+    # refazer sem baixar de novo: mantém a nota única e as imagens
+    monkeypatch.setattr(imagens, "listar", lambda *a: [])
+    refeito = q.pedir_imagens(item.id)
+    worker.process(q, settings, refeito)
+    assert len(list(settings.inbox_dir.glob("*.md"))) == 1
+    assert (settings.vault_path / f"Referencias/Salvos/_anexos/{item.id}/01.png").exists()
+    q.close()
