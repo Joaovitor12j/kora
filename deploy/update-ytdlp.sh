@@ -6,6 +6,8 @@
 # nightly, que recebem as correções de sites antes da versão estável.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# O systemd --user não tem ~/.local/bin no PATH, onde o uv fica (sem isso: status 127).
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 antes=$(.venv/bin/yt-dlp --version)
 uv pip install --quiet --python .venv/bin/python --upgrade ${KORA_YTDLP_NIGHTLY:+--pre} "yt-dlp[default]"
