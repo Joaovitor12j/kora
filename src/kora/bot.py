@@ -11,7 +11,7 @@ from .logs import configurar
 from .status import texto_status
 from .correcao import corrigir_categoria, pedido_de_categoria
 from .db import CONCLUIDO, FALHOU, NA_FILA, Queue
-from .urls import canonicalize, extract_urls, needs_resolution, platform_of, resolve_redirects
+from .urls import canonicalize, extract_urls, needs_resolution, platform_of, quer_imagens, resolve_redirects
 
 log = logging.getLogger("kora.bot")
 
@@ -30,16 +30,22 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await msg.reply_text("Mande um link para eu salvar.")
         return
     queue: Queue = context.application.bot_data["queue"]
+    imagens = quer_imagens(msg.text or "")
     replies = []
     for url in urls:
         if needs_resolution(url):
             url = await asyncio.to_thread(resolve_redirects, url)
         canonica = canonicalize(url)
         item, created = queue.enqueue(
-            url, canonica, platform_of(url), chat_id=msg.chat_id, message_id=msg.message_id
+            url, canonica, platform_of(url), chat_id=msg.chat_id, message_id=msg.message_id,
+            guardar_imagens=imagens,
         )
+        if not created and imagens and not item.guardar_imagens:
+            item = queue.pedir_imagens(item.id)
+            replies.append(f"refazendo com as imagens: {canonica}")
+            continue
         if created:
-            replies.append(f"na fila: {canonica}")
+            replies.append(f"na fila{' (com imagens)' if imagens else ''}: {canonica}")
         elif item.status == CONCLUIDO:
             replies.append(f"já salvo: {item.titulo}")
         elif item.status == FALHOU:

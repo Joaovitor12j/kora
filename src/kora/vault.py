@@ -1,5 +1,6 @@
 import json
 import re
+import shutil
 import time
 from pathlib import Path
 
@@ -43,6 +44,28 @@ def _conteudo(meta: Meta) -> list[str]:
     return ["## Transcrição", f"> [!note]- {titulo}", *corpo, ""]
 
 
+def salvar_imagens(settings, meta: Meta, item_id: int) -> None:
+    """Grava `meta.imagens_salvar` em `<salvos>/_anexos/<id>/NN.ext` e deixa os caminhos (a partir da raiz
+    do vault) em `meta.imagens_links`. Fica fora das pastas de categoria para a nota poder mudar de lugar."""
+    if not meta.imagens_salvar:
+        return
+    pasta = settings.saved_dir / "_anexos" / str(item_id)
+    shutil.rmtree(pasta, ignore_errors=True)  # reprocessar troca o conjunto inteiro
+    pasta.mkdir(parents=True)
+    meta.imagens_links = []
+    for i, (ext, dados) in enumerate(meta.imagens_salvar, 1):
+        arquivo = pasta / f"{i:02d}{ext or '.jpg'}"
+        arquivo.write_bytes(dados)
+        meta.imagens_links.append(arquivo.relative_to(settings.vault_path).as_posix())
+    meta.imagens_salvar = []
+
+
+def _imagens(meta: Meta) -> list[str]:
+    if not meta.imagens_links:
+        return []
+    return ["## Imagens", *(f"![[{link}]]" for link in meta.imagens_links), ""]
+
+
 def render(meta: Meta, criado: str) -> str:
     lines = [
         "---",
@@ -74,6 +97,7 @@ def render(meta: Meta, criado: str) -> str:
         f"# {meta.titulo}",
         "",
         *_resumo(meta),
+        *_imagens(meta),
         "## Legenda original",
         meta.descricao or "_(sem legenda)_",
         "",
@@ -99,6 +123,23 @@ def write_note(directory: Path, meta: Meta, item_id: int, now: float | None = No
     path = note_path(directory, meta, criado, item_id)
     path.write_text(render(meta, criado), encoding="utf-8")
     return path
+
+
+def achar_nota(raiz: Path, url: str, caminho: str | None = None) -> Path | None:
+    """A nota de um link, mesmo que tenha sido movida de pasta (ex.: agrupada por mês).
+
+    Tenta o caminho guardado na fila; se não existe mais, procura no acervo pela linha `url:`.
+    """
+    if caminho and Path(caminho).is_file():
+        return Path(caminho)
+    linha = f"url: {_q(url)}"
+    for nota in sorted(raiz.rglob("*.md")):
+        try:
+            if linha in nota.read_text(encoding="utf-8")[:2000].splitlines():
+                return nota
+        except OSError:
+            continue
+    return None
 
 
 def destino(settings, meta: Meta) -> Path:
@@ -163,6 +204,7 @@ def ler_nota(path: Path) -> tuple[Meta, str]:
               re.findall(r"^## (.+?)\n(.*?)(?=^## |\Z)", corpo, re.M | re.S)}
     meta.resumo = secoes.get("Resumo", "")
     meta.pontos_chave = [l[2:].strip() for l in secoes.get("Pontos-chave", "").splitlines() if l.startswith("- ")]
+    meta.imagens_links = re.findall(r"!\[\[(.+?)\]\]", secoes.get("Imagens", ""))
     legenda = secoes.get("Legenda original", "")
     meta.descricao = "" if legenda == "_(sem legenda)_" else legenda
     meta.ferramentas = ler_secao(secoes.get("Ferramentas", ""))
@@ -197,6 +239,8 @@ def mover_categoria(settings, nota: Path, categoria: str) -> Path:
         cab = re.sub(r"^(tags:)", rf"{linha}\n\1", cab, count=1, flags=re.M)
     cab = re.sub(r"^assunto:.*\n?", "", cab, flags=re.M).rstrip("\n")  # o assunto era da categoria antiga
     pasta = settings.saved_dir / categoria
+    if re.fullmatch(r"\d{4}-\d{2}", nota.parent.name):
+        pasta = pasta / nota.parent.name  # nota já agrupada por mês continua no mês, na categoria nova
     pasta.mkdir(parents=True, exist_ok=True)
     novo = pasta / nota.name
     n = 2

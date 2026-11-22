@@ -23,6 +23,15 @@ def extract_urls(text: str) -> list[str]:
     return list(seen)
 
 
+PALAVRAS_IMAGEM = {"ref", "refs", "referencia", "referência", "imagem", "imagens", "img", "foto", "fotos"}
+
+
+def quer_imagens(text: str) -> bool:
+    """Palavra solta (`ref`, `imagem`, `#ref`…) fora dos links pede para guardar as imagens do post."""
+    sem_links = URL_RE.sub(" ", text or "")
+    return any(p.strip("#.,;:!?").lower() in PALAVRAS_IMAGEM for p in sem_links.split())
+
+
 def _host(url: str) -> str:
     host = (urlsplit(url).hostname or "").lower()
     return host.removeprefix("www.").removeprefix("m.")
