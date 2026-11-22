@@ -13,7 +13,7 @@ from .extractors.meta import Meta, fetch_meta
 from .indice import garantir_indice
 from .logs import configurar
 from .llm import Provider, build_provider
-from .media import attach_imagens, attach_transcript
+from .media import attach_imagens, attach_link, attach_transcript
 from .telegram_api import send_message
 from .vault import achar_nota, destino, ler_nota, salvar_imagens, tags_existentes, write_note
 
@@ -27,6 +27,7 @@ def process(queue: Queue, settings: Settings, item: Item, provider: Provider | N
     meta = fetch_meta(item.url_canonica, item.plataforma)
     attach_transcript(meta, settings)
     attach_imagens(meta, settings, guardar=bool(item.guardar_imagens))
+    attach_link(meta)
     anterior = achar_nota(settings.saved_dir, item.url_canonica, item.nota_path)
     if anterior:  # refazer a nota (ex.: pediu as imagens depois): mantém a data de criação e as imagens já guardadas
         antigo, _ = ler_nota(anterior)

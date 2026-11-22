@@ -32,6 +32,7 @@ kora-bot = "kora.bot:main"
 kora-worker = "kora.worker:main"
 kora-reclassify = "kora.reclassificar:main"
 kora-tags = "kora.tags:main"
+kora-pobres = "kora.pobres:main"
 kora-assunto = "kora.assuntos:main"
 kora-web ="kora.web.app:main"
 

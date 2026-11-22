@@ -180,7 +180,7 @@ def test_classificar_fills_meta_or_leaves_pending(tmp_path):
 # --- nota / vault -----------------------------------------------------------
 
 def classificada():
-    m = Meta(url="https://u", plataforma="x", titulo="T", descricao="legenda")
+    m = Meta(url="https://u", plataforma="x", titulo="T", descricao="legenda " * 40)
     c = Classificacao(**BOM)
     m.titulo, m.resumo, m.pontos_chave, m.categoria, m.tags, m.ia = c.titulo, c.resumo, c.pontos_chave, c.categoria, c.tags, "a/m"
     return m
