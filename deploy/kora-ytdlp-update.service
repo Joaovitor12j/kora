@@ -3,4 +3,6 @@ Description=Kora — atualizar o yt-dlp (os sites mudam e quebram versões antig
 
 [Service]
 Type=oneshot
+# O systemd de usuário não inclui ~/.local/bin no PATH, onde o uv costuma ficar.
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=@REPO@/deploy/update-ytdlp.sh
